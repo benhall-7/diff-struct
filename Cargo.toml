@@ -1,0 +1,11 @@
+[package]
+name = "diff-struct"
+version = "0.1.0"
+authors = ["BenHall-7 <benjaminjahall@gmail.com>"]
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+name = "diff-struct"
+
+[dependencies]
