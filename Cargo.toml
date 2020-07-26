@@ -5,7 +5,7 @@ authors = ["BenHall-7 <benjaminjahall@gmail.com>"]
 edition = "2018"
 
 [lib]
+name = "diff_struct"
 path = "src/lib.rs"
-name = "diff-struct"
 
 [dependencies]
