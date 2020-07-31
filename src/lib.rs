@@ -5,7 +5,7 @@ pub trait Diff: Sized {
     /// The type associated with the structs' difference
     type Repr;
 
-    const Identity: Self::Repr;
+    const IDENTITY: Self::Repr;
 
     /// Produces a diff between two structs
     fn diff(&self, other: &Self) -> Self::Repr;

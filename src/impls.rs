@@ -23,13 +23,13 @@ impl From<bool> for BoolDiff {
 impl Diff for bool {
     type Repr = BoolDiff;
 
-    const Identity: BoolDiff = BoolDiff::None;
+    const IDENTITY: BoolDiff = BoolDiff::None;
 
     fn diff(&self, other: &Self) -> Self::Repr {
         if self != other {
             (*other).into()
         } else {
-            Self::Identity
+            Self::IDENTITY
         }
     }
 
@@ -47,7 +47,7 @@ macro_rules! diff_int {
         $(impl Diff for $ty {
             type Repr = $ty;
 
-            const Identity: $ty = 0;
+            const IDENTITY: $ty = 0;
 
             fn diff(&self, other: &Self) -> Self::Repr {
                 other.wrapping_sub(*self)
@@ -65,7 +65,7 @@ macro_rules! diff_float {
         $(impl Diff for $ty {
             type Repr = $ty;
 
-            const Identity: $ty = 0.0;
+            const IDENTITY: $ty = 0.0;
 
             fn diff(&self, other: &Self) -> Self::Repr {
                 other - self
@@ -103,7 +103,7 @@ where
 {
     type Repr = Option<HashMapDiff<K, V>>;
 
-    const Identity: Self::Repr = None;
+    const IDENTITY: Self::Repr = None;
 
     fn diff(&self, other: &Self) -> Self::Repr {
         let mut diff = HashMapDiff {
@@ -129,14 +129,14 @@ where
                     if let Some(change) = diff.altered.get(key) {
                         new.insert(key.clone(), value.apply_new(change));
                     } else {
-                        new.insert(key.clone(), value.apply_new(&V::Identity));
+                        new.insert(key.clone(), value.apply_new(&V::IDENTITY));
                     }
                 }
             }
             new
         } else {
             self.into_iter()
-                .map(|(key, value)| (key.clone(), value.apply_new(&V::Identity)))
+                .map(|(key, value)| (key.clone(), value.apply_new(&V::IDENTITY)))
                 .collect::<HashMap<_, _>>()
         }
     }
@@ -154,32 +154,3 @@ where
         }
     }
 }
-
-// {
-//   "a": "test a",
-//   "b": "test b"
-// }
-// -->
-// {
-//   "a": "test a",
-//   "b": "test C!!!"
-// }
-// diff =
-// { "b": "test C!!!" }
-//
-// ANOTHER EXAMPLE
-//
-// {
-//   "a": "test a",
-//   "b": "test b"
-// }
-// -->
-// {
-//   "a": "test a",
-//   "c": "test b"
-// }
-// diff =
-// {
-//   "b": removed?
-//   "c": "test b"
-// }
