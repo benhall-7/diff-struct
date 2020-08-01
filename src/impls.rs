@@ -88,12 +88,12 @@ diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 diff_float!(f32, f64);
 
 /// The diff struct used to compare two HashMap's
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct HashMapDiff<K, V>
 where
     K: Eq + Hash + Clone,
     V: Diff,
-    <V as Diff>::Repr: Debug,
+    <V as Diff>::Repr: Debug + PartialEq,
 {
     /// Values that are changed or added
     pub altered: HashMap<K, <V as Diff>::Repr>,
@@ -105,7 +105,7 @@ impl<K, V> Diff for HashMap<K, V>
 where
     K: Eq + Hash + Clone,
     V: Diff,
-    <V as Diff>::Repr: Debug,
+    <V as Diff>::Repr: Debug + PartialEq,
 {
     type Repr = HashMapDiff<K, V>;
 
@@ -114,11 +114,17 @@ where
             altered: HashMap::new(),
             removed: HashSet::new(),
         };
+        // can we do better than this?
         for (key, value) in self {
             if let Some(other_value) = other.get(key) {
                 diff.altered.insert(key.clone(), value.diff(other_value));
             } else {
                 diff.removed.insert(key.clone());
+            }
+        }
+        for (key, value) in other {
+            if let None = self.get(key) {
+                diff.altered.insert(key.clone(), V::identity().diff(value));
             }
         }
         diff

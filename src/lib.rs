@@ -1,4 +1,8 @@
 mod impls;
+#[cfg(test)]
+mod tests;
+
+pub use impls::*;
 
 /// A trait to diff and apply diffs between two structs
 pub trait Diff: Sized {
@@ -14,9 +18,11 @@ pub trait Diff: Sized {
         *self = self.apply_new(diff);
     }
     /// The identity element of the struct
-    /// For any struct `s` and identity struct `i`,
     /// ```
-    /// assert_eq!(i.apply_new(i.diff(s)), s);
+    /// use diff::Diff;
+    /// let s = 42;
+    /// let i = <i32 as Diff>::identity();
+    /// assert_eq!(i.apply_new(&i.diff(&s)), s);
     /// ```
     /// or mathematically speaking, `i + (s - i) = s`
     fn identity() -> Self;
