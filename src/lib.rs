@@ -5,8 +5,6 @@ pub trait Diff: Sized {
     /// The type associated with the structs' difference
     type Repr;
 
-    const IDENTITY: Self::Repr;
-
     /// Produces a diff between two structs
     fn diff(&self, other: &Self) -> Self::Repr;
     /// Applies the diff to the struct and produces a new struct
@@ -15,4 +13,11 @@ pub trait Diff: Sized {
     fn apply(&mut self, diff: &Self::Repr) {
         *self = self.apply_new(diff);
     }
+    /// The identity element of the struct
+    /// For any struct `s` and identity struct `i`,
+    /// ```
+    /// assert_eq!(i.apply_new(i.diff(s)), s);
+    /// ```
+    /// or mathematically speaking, `i + (s - i) = s`
+    fn identity() -> Self;
 }
