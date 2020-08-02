@@ -9,3 +9,7 @@ name = "diff"
 path = "src/lib.rs"
 
 [dependencies]
+diff-derive = { path = "diff-derive" }
+
+[workspace]
+members = ["diff-derive"]

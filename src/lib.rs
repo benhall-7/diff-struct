@@ -5,7 +5,7 @@ mod tests;
 pub use impls::*;
 
 /// A trait to diff and apply diffs between two structs
-pub trait Diff: Sized {
+pub trait Diff: Sized + PartialEq {
     /// The type associated with the structs' difference
     type Repr;
 

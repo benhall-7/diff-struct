@@ -87,6 +87,66 @@ macro_rules! diff_float {
 diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 diff_float!(f32, f64);
 
+#[derive(Debug, PartialEq)]
+pub enum OptionDiff<T>
+where
+    T: Diff,
+{
+    Some(T::Repr),
+    None,
+    NoChange
+}
+
+impl<T> Diff for Option<T>
+where
+    T: Diff,
+{
+    type Repr = OptionDiff<T>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        match (self, other) {
+            (Some(value), Some(other_value)) => {
+                if value == other_value {
+                    OptionDiff::NoChange
+                } else {
+                    OptionDiff::Some(value.diff(other_value))
+                }
+            }
+            (Some(_), None) => OptionDiff::None,
+            (None, Some(other_value)) => {
+                OptionDiff::Some(T::identity().diff(other_value))
+            }
+            (None, None) => OptionDiff::NoChange,
+        }
+    }
+
+    fn apply_new(&self, diff: &Self::Repr) -> Self {
+        let mut new = Self::identity();
+        // basically get a new copy of self
+        new.apply(&Self::identity().diff(self));
+        new.apply(diff);
+        new
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        match diff {
+            OptionDiff::None => *self = None,
+            OptionDiff::Some(diff_value) => {
+                if let Some(value) = self {
+                    value.apply(diff_value);
+                } else {
+                    T::identity().apply(diff_value);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    fn identity() -> Self {
+        None
+    }
+}
+
 /// The diff struct used to compare two HashMap's
 #[derive(Debug, PartialEq)]
 pub struct HashMapDiff<K, V>
@@ -132,9 +192,9 @@ where
 
     // allocation makes this a bit expensive
     fn apply_new(&self, diff: &Self::Repr) -> Self {
-        let mut new = HashMap::identity();
+        let mut new = Self::identity();
         // basically get a new copy of self
-        new.apply(&HashMap::identity().diff(self));
+        new.apply(&Self::identity().diff(self));
         new.apply(diff);
         new
     }
