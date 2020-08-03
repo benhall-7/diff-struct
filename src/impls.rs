@@ -31,11 +31,11 @@ impl Diff for bool {
         }
     }
 
-    fn apply_new(&self, diff: &Self::Repr) -> Self {
+    fn apply(&mut self, diff: &Self::Repr) {
         match diff {
-            BoolDiff::True => true,
-            BoolDiff::False => false,
-            BoolDiff::None => *self,
+            BoolDiff::True => *self = true,
+            BoolDiff::False => *self = false,
+            _ => {}
         }
     }
 
@@ -53,8 +53,8 @@ macro_rules! diff_int {
                 other.wrapping_sub(*self)
             }
 
-            fn apply_new(&self, diff: &Self::Repr) -> Self {
-                self.wrapping_add(*diff)
+            fn apply(&mut self, diff: &Self::Repr) {
+                *self = self.wrapping_add(*diff);
             }
 
             fn identity() -> $ty {
@@ -73,8 +73,8 @@ macro_rules! diff_float {
                 other - self
             }
 
-            fn apply_new(&self, diff: &Self::Repr) -> Self {
-                self + diff
+            fn apply(&mut self, diff: &Self::Repr){
+                *self += diff;
             }
 
             fn identity() -> $ty {
@@ -94,7 +94,7 @@ where
 {
     Some(T::Repr),
     None,
-    NoChange
+    NoChange,
 }
 
 impl<T> Diff for Option<T>
@@ -113,19 +113,9 @@ where
                 }
             }
             (Some(_), None) => OptionDiff::None,
-            (None, Some(other_value)) => {
-                OptionDiff::Some(T::identity().diff(other_value))
-            }
+            (None, Some(other_value)) => OptionDiff::Some(T::identity().diff(other_value)),
             (None, None) => OptionDiff::NoChange,
         }
-    }
-
-    fn apply_new(&self, diff: &Self::Repr) -> Self {
-        let mut new = Self::identity();
-        // basically get a new copy of self
-        new.apply(&Self::identity().diff(self));
-        new.apply(diff);
-        new
     }
 
     fn apply(&mut self, diff: &Self::Repr) {
@@ -188,15 +178,6 @@ where
             }
         }
         diff
-    }
-
-    // allocation makes this a bit expensive
-    fn apply_new(&self, diff: &Self::Repr) -> Self {
-        let mut new = Self::identity();
-        // basically get a new copy of self
-        new.apply(&Self::identity().diff(self));
-        new.apply(diff);
-        new
     }
 
     // basically inexpensive

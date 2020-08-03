@@ -35,9 +35,31 @@ fn map_diffs() {
     };
     assert_eq!(a.diff(&b), expected);
     identity_test(a);
+}
 
-    // testing
+#[derive(Debug, PartialEq, Diff)]
+pub struct TestStruct {
+    a: bool,
+    b: u32,
+}
 
-    let test = [("a", 1)].iter().map(|x| *x).collect::<HashMap<_, _>>();
-    let test_2 = vec![("a", 1)].into_iter();
+#[test]
+fn test_derive() {
+    let a = TestStruct {
+        a: false,
+        b: 42
+    };
+
+    let b = TestStruct {
+        a: true,
+        b: 43
+    };
+
+    let diff = TestStructDiff {
+        a: true.into(),
+        b: 1
+    };
+    assert_eq!(a.diff(&b), diff);
+
+    identity_test(a);
 }
