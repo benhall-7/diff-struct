@@ -2,8 +2,8 @@ mod impls;
 #[cfg(test)]
 mod tests;
 
-pub use impls::*;
 pub use diff_derive::Diff;
+pub use impls::*;
 
 /// A trait to diff and apply diffs between two structs
 /// The derive macro can be used on structs when all fields of the struct implement Diff

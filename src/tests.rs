@@ -45,19 +45,13 @@ pub struct TestStruct {
 
 #[test]
 fn test_derive() {
-    let a = TestStruct {
-        a: false,
-        b: 42
-    };
+    let a = TestStruct { a: false, b: 42 };
 
-    let b = TestStruct {
-        a: true,
-        b: 43
-    };
+    let b = TestStruct { a: true, b: 43 };
 
     let diff = TestStructDiff {
         a: true.into(),
-        b: 1
+        b: 1,
     };
     assert_eq!(a.diff(&b), diff);
 
