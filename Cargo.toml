@@ -9,4 +9,4 @@ name = "diff"
 path = "src/lib.rs"
 
 [dependencies]
-diff_derive = { path = "derive" }
+diff_derive = "0.1.0"
