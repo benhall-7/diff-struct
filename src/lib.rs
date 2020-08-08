@@ -8,7 +8,7 @@ pub use impls::*;
 /// A trait to diff and apply diffs between two structs
 /// The derive macro can be used on structs when all fields of the struct implement Diff
 /// Implementations are provided for bools, numeric types, Option types, and HashMaps
-pub trait Diff: Sized + PartialEq {
+pub trait Diff: Sized {
     /// The type associated with the structs' difference
     type Repr;
 

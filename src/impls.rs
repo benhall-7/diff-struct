@@ -3,39 +3,20 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub enum BoolDiff {
-    None,
-    True,
-    False,
-}
-
-impl From<bool> for BoolDiff {
-    fn from(f: bool) -> Self {
-        if f {
-            BoolDiff::True
-        } else {
-            BoolDiff::False
-        }
-    }
-}
-
 impl Diff for bool {
-    type Repr = BoolDiff;
+    type Repr = Option<bool>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
         if self != other {
-            (*other).into()
+            Some(*other)
         } else {
-            BoolDiff::None
+            None
         }
     }
 
     fn apply(&mut self, diff: &Self::Repr) {
-        match diff {
-            BoolDiff::True => *self = true,
-            BoolDiff::False => *self = false,
-            _ => {}
+        if let Some(diff) = diff {
+            *self = *diff;
         }
     }
 
@@ -87,10 +68,32 @@ macro_rules! diff_float {
 diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 diff_float!(f32, f64);
 
+impl Diff for String {
+    type Repr = Option<String>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        if self != other {
+            Some(other.clone())
+        } else {
+            None
+        }
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(diff) = diff {
+            *self = diff.clone()
+        }
+    }
+
+    fn identity() -> Self {
+        String::new()
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum OptionDiff<T>
 where
-    T: Diff,
+    T: Diff + PartialEq,
 {
     Some(T::Repr),
     None,
@@ -99,7 +102,7 @@ where
 
 impl<T> Diff for Option<T>
 where
-    T: Diff,
+    T: Diff + PartialEq,
 {
     type Repr = OptionDiff<T>;
 

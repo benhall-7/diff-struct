@@ -38,7 +38,10 @@ fn map_diffs() {
 }
 
 #[derive(Debug, PartialEq, Diff)]
-pub struct TestStruct {
+#[diff(attr(
+    #[derive(Debug, PartialEq)]
+))]
+struct TestStruct {
     a: bool,
     b: u32,
 }

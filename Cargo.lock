@@ -4,13 +4,12 @@
 name = "diff-struct"
 version = "0.1.0"
 dependencies = [
- "diff_derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "diff_derive 0.1.0",
 ]
 
 [[package]]
 name = "diff_derive"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -49,7 +48,6 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [metadata]
-"checksum diff_derive 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "82b6625b3d18ce085e7e55320c703a84cf442a07c194e0700db4ceb5b8a10391"
 "checksum proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)" = "04f5f085b5d71e2188cb8271e5da0161ad52c3f227a661a3c135fdf28e258b12"
 "checksum quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)" = "aa563d17ecb180e500da1cfd2b028310ac758de548efdd203e18f283af693f37"
 "checksum syn 1.0.36 (registry+https://github.com/rust-lang/crates.io-index)" = "4cdb98bcb1f9d81d07b536179c269ea15999b5d14ea958196413869445bb5250"
