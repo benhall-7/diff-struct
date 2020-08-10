@@ -1,6 +1,7 @@
 mod impls;
 #[cfg(test)]
 mod tests;
+pub mod utils;
 
 pub use diff_derive::Diff;
 pub use impls::*;

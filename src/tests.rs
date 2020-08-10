@@ -1,4 +1,4 @@
-use super::{Diff, HashMapDiff};
+use super::*;
 
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
@@ -59,4 +59,24 @@ fn test_derive() {
     assert_eq!(a.diff(&b), diff);
 
     identity_test(a);
+}
+
+#[test]
+fn test_vecs() {
+    let a = vec![0, 1, 2, 3, 4, 5, 6, 7];
+    let b = vec![0, /*1, 2*/ 3, 4, 42, 5, /*6 ->*/ 10, 7];
+    let expected = VecDiff {
+        changes: vec![
+            VecDiffType::Removed { index: 1, len: 2 },
+            VecDiffType::Inserted {
+                index: 5,
+                changes: vec![42],
+            },
+            VecDiffType::Altered {
+                index: 6,
+                changes: vec![4], // add 4 to 6
+            },
+        ],
+    };
+    assert_eq!(expected, a.diff(&b));
 }

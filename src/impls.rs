@@ -1,4 +1,6 @@
+use super::utils::find_match;
 use super::*;
+use std::cmp::min;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -199,5 +201,112 @@ where
 
     fn identity() -> Self {
         HashMap::new()
+    }
+}
+
+/// The type of change to make to a vec
+#[derive(Debug, PartialEq)]
+pub enum VecDiffType<T: PartialEq + Clone + Diff> {
+    Removed { index: usize, len: usize },
+    Altered { index: usize, changes: Vec<T::Repr> },
+    Inserted { index: usize, changes: Vec<T::Repr> },
+}
+
+/// The collection of differences vecs
+#[derive(Debug, PartialEq)]
+pub struct VecDiff<T>
+where
+    T: PartialEq + Clone + Diff,
+    <T as Diff>::Repr: Debug + PartialEq,
+{
+    pub changes: Vec<VecDiffType<T>>,
+}
+
+impl<T> Diff for Vec<T>
+where
+    T: PartialEq + Clone + Diff,
+    <T as Diff>::Repr: Debug + PartialEq,
+{
+    type Repr = VecDiff<T>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        let mut changes = Vec::new();
+        let mut pos_x = 0;
+        let mut pos_y = 0;
+        loop {
+            let (is_match, deletions, insertions) = find_match(&self[pos_x..], &other[pos_y..]);
+
+            // TODO: simplify logic here
+            if deletions == 0 || insertions == 0 {
+                if deletions > 0 {
+                    changes.push(VecDiffType::Removed {
+                        index: pos_x,
+                        len: deletions,
+                    });
+                } else if insertions > 0 {
+                    changes.push(VecDiffType::Inserted {
+                        index: pos_x,
+                        changes: other[pos_y..pos_y + insertions]
+                            .iter()
+                            .map(|new| T::identity().diff(&new))
+                            .collect(),
+                    });
+                }
+            } else if deletions == insertions {
+                changes.push(VecDiffType::Altered {
+                    index: pos_x,
+                    changes: self[pos_x..pos_x + deletions]
+                        .iter()
+                        .zip(other[pos_y..pos_y + insertions].iter())
+                        .map(|(a, b)| a.diff(&b))
+                        .collect(),
+                });
+            } else if deletions > insertions {
+                changes.push(VecDiffType::Altered {
+                    index: pos_x,
+                    changes: self[pos_x..pos_x + insertions]
+                        .iter()
+                        .zip(other[pos_y..pos_y + insertions].iter())
+                        .map(|(a, b)| a.diff(&b))
+                        .collect(),
+                });
+                changes.push(VecDiffType::Removed {
+                    index: pos_x + insertions,
+                    len: deletions - insertions,
+                });
+            } else {
+                changes.push(VecDiffType::Altered {
+                    index: pos_x,
+                    changes: self[pos_x..pos_x + deletions]
+                        .iter()
+                        .zip(other[pos_y..pos_y + deletions].iter())
+                        .map(|(a, b)| a.diff(&b))
+                        .collect(),
+                });
+                changes.push(VecDiffType::Inserted {
+                    index: pos_x + deletions,
+                    changes: other[pos_y + deletions..pos_y + insertions]
+                        .iter()
+                        .map(|new| T::identity().diff(&new))
+                        .collect(),
+                });
+            }
+
+            if is_match {
+                pos_x += deletions + 1;
+                pos_y += insertions + 1;
+            } else {
+                break;
+            }
+        }
+        VecDiff { changes }
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        todo!();
+    }
+
+    fn identity() -> Self {
+        Vec::new()
     }
 }
