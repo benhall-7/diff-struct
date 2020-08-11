@@ -26,9 +26,9 @@ fn numeric_diffs() {
 }
 
 #[test]
-fn map_diffs() {
-    let a = generate_map(vec![("a", 1), ("b", 2)]);
-    let b = generate_map(vec![("b", 3), ("c", 4)]);
+fn test_maps() {
+    let a = generate_map(vec![("a", 1), ("b", 2), ("x", 42)]);
+    let b = generate_map(vec![("b", 3), ("c", 4), ("x", 42)]);
     let expected = HashMapDiff {
         altered: generate_map(vec![("b", 1), ("c", 4)]),
         removed: vec!["a"].into_iter().collect::<HashSet<_>>(),

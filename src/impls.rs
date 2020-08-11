@@ -200,9 +200,10 @@ pub struct HashMapDiff<K: Hash + Eq, V: Diff> {
     pub removed: HashSet<K>,
 }
 
-impl<K: Hash + Eq, V: Diff + PartialEq> Diff for HashMap<K, V>
+impl<K: Hash + Eq, V: Diff> Diff for HashMap<K, V>
 where
     K: Clone,
+    V: PartialEq,
 {
     type Repr = HashMapDiff<K, V>;
 
@@ -214,7 +215,10 @@ where
         // can we do better than this?
         for (key, value) in self {
             if let Some(other_value) = other.get(key) {
-                diff.altered.insert(key.clone(), value.diff(other_value));
+                // don't store values that don't change
+                if value != other_value {
+                    diff.altered.insert(key.clone(), value.diff(other_value));
+                }
             } else {
                 diff.removed.insert(key.clone());
             }
