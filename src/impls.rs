@@ -1,8 +1,9 @@
 use super::utils::find_match;
 use super::*;
-use std::cmp::min;
+use serde::{Serialize, Serializer};
+use serde::ser::{SerializeStruct, SerializeStructVariant};
 use std::collections::{HashMap, HashSet};
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
 
 impl Diff for bool {
@@ -92,20 +93,13 @@ impl Diff for String {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum OptionDiff<T>
-where
-    T: Diff + PartialEq,
-{
+pub enum OptionDiff<T: Diff> {
     Some(T::Repr),
     None,
     NoChange,
 }
 
-impl<T> Diff for Option<T>
-where
-    T: Diff + PartialEq,
-{
+impl<T: Diff + PartialEq> Diff for Option<T> {
     type Repr = OptionDiff<T>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
@@ -142,25 +136,73 @@ where
     }
 }
 
-/// The diff struct used to compare two HashMap's
-#[derive(Debug, PartialEq)]
-pub struct HashMapDiff<K, V>
+impl<T: Diff> Debug for OptionDiff<T>
 where
-    K: Eq + Hash + Clone,
-    V: Diff,
-    <V as Diff>::Repr: Debug + PartialEq,
+    T::Repr: Debug,
 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match &self {
+            OptionDiff::Some(change) => f.debug_tuple("Some").field(change).finish(),
+            OptionDiff::None => write!(f, "None"),
+            OptionDiff::NoChange => write!(f, "NoChange"),
+        }
+    }
+}
+
+impl<T: Diff> PartialEq for OptionDiff<T>
+where
+    T::Repr: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (OptionDiff::Some(a), OptionDiff::Some(b)) => a == b,
+            (OptionDiff::None, OptionDiff::None) => true,
+            (OptionDiff::NoChange, OptionDiff::NoChange) => true,
+            _ => false,
+        }
+    }
+}
+
+impl<T: Diff> Clone for OptionDiff<T>
+where
+    T::Repr: Clone,
+{
+    fn clone(&self) -> Self {
+        match self {
+            OptionDiff::Some(a) => OptionDiff::Some(a.clone()),
+            OptionDiff::None => OptionDiff::None,
+            OptionDiff::NoChange => OptionDiff::NoChange,
+        }
+    }
+}
+
+impl<T: Diff> Serialize for OptionDiff<T>
+where
+    T::Repr: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            OptionDiff::Some(c) => serializer.serialize_newtype_variant("OptionDiff", 0, "Some", c),
+            OptionDiff::None => serializer.serialize_unit_variant("OptionDiff", 1, "None"),
+            OptionDiff::NoChange => serializer.serialize_unit_variant("OptionDiff", 2, "NoChange"),
+        }
+    }
+}
+
+/// The diff struct used to compare two HashMap's
+pub struct HashMapDiff<K: Hash + Eq, V: Diff> {
     /// Values that are changed or added
     pub altered: HashMap<K, <V as Diff>::Repr>,
     /// Values that are removed
     pub removed: HashSet<K>,
 }
 
-impl<K, V> Diff for HashMap<K, V>
+impl<K: Hash + Eq, V: Diff + PartialEq> Diff for HashMap<K, V>
 where
-    K: Eq + Hash + Clone,
-    V: Diff,
-    <V as Diff>::Repr: Debug + PartialEq,
+    K: Clone,
 {
     type Repr = HashMapDiff<K, V>;
 
@@ -204,29 +246,175 @@ where
     }
 }
 
+impl<K: Eq + Hash, V: Diff> Debug for HashMapDiff<K, V>
+where
+    K: Debug,
+    V::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_struct("HashMapDiff")
+            .field("altered", &self.altered)
+            .field("removed", &self.removed)
+            .finish()
+    }
+}
+
+impl<K: Eq + Hash, V: Diff> PartialEq for HashMapDiff<K, V>
+where
+    V::Repr: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.altered == other.altered && self.removed == other.removed
+    }
+}
+
+impl<K: Eq + Hash, V: Diff> Clone for HashMapDiff<K, V>
+where
+    K: Clone,
+    V::Repr: Clone,
+{
+    fn clone(&self) -> Self {
+        HashMapDiff {
+            altered: self.altered.clone(),
+            removed: self.removed.clone(),
+        }
+    }
+}
+
+impl<K: Eq + Hash, V: Diff> Serialize for HashMapDiff<K, V>
+where
+    K: Serialize,
+    V::Repr: Serialize,
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut start = serializer.serialize_struct("HashMapDiff", 2)?;
+        start.serialize_field("altered", &self.altered)?;
+        start.serialize_field("removed", &self.removed)?;
+        start.end()
+    }
+}
+
 /// The type of change to make to a vec
-#[derive(Debug, PartialEq)]
-pub enum VecDiffType<T: PartialEq + Clone + Diff> {
+pub enum VecDiffType<T: Diff> {
     Removed { index: usize, len: usize },
     Altered { index: usize, changes: Vec<T::Repr> },
     Inserted { index: usize, changes: Vec<T::Repr> },
 }
 
-/// The collection of differences vecs
-#[derive(Debug, PartialEq)]
-pub struct VecDiff<T>
+impl<T: Diff> Debug for VecDiffType<T>
 where
-    T: PartialEq + Clone + Diff,
-    <T as Diff>::Repr: Debug + PartialEq,
+    T::Repr: Debug,
 {
-    pub changes: Vec<VecDiffType<T>>,
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            VecDiffType::Removed { index, len } => f
+                .debug_struct("Removed")
+                .field("index", index)
+                .field("len", len)
+                .finish(),
+            VecDiffType::Altered { index, changes } => f
+                .debug_struct("Removed")
+                .field("index", index)
+                .field("changes", changes)
+                .finish(),
+            VecDiffType::Inserted { index, changes } => f
+                .debug_struct("Removed")
+                .field("index", index)
+                .field("changes", changes)
+                .finish(),
+        }
+    }
 }
 
-impl<T> Diff for Vec<T>
+impl<T: Diff> PartialEq for VecDiffType<T>
 where
-    T: PartialEq + Clone + Diff,
-    <T as Diff>::Repr: Debug + PartialEq,
+    T::Repr: PartialEq,
 {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                VecDiffType::Removed { index, len },
+                VecDiffType::Removed {
+                    index: ref index_,
+                    len: ref len_,
+                },
+            ) => index == index_ && len == len_,
+            (
+                VecDiffType::Altered { index, changes },
+                VecDiffType::Altered {
+                    index: ref index_,
+                    changes: ref changes_,
+                },
+            ) => index == index_ && changes == changes_,
+            (
+                VecDiffType::Inserted { index, changes },
+                VecDiffType::Inserted {
+                    index: ref index_,
+                    changes: ref changes_,
+                },
+            ) => index == index_ && changes == changes_,
+            _ => false,
+        }
+    }
+}
+
+impl<T: Diff> Clone for VecDiffType<T>
+where
+    T::Repr: Clone
+{
+    fn clone(&self) -> Self {
+        match self {
+            VecDiffType::Removed { index, len } => {
+                VecDiffType::Removed { index: *index, len: *len }
+            }
+            VecDiffType::Altered { index, changes } => {
+                VecDiffType::Altered { index: *index, changes: changes.clone() }
+            }
+            VecDiffType::Inserted { index, changes } => {
+                VecDiffType::Inserted { index: *index, changes: changes.clone() }
+            }
+        }
+    }
+}
+
+impl<T: Diff> Serialize for VecDiffType<T>
+where
+    T::Repr: Serialize
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            VecDiffType::Removed { index, len } => {
+                let mut start = serializer.serialize_struct_variant("VecDiffType", 0, "Removed", 2)?;
+                start.serialize_field("index", index)?;
+                start.serialize_field("len", len)?;
+                start.end()
+            }
+            VecDiffType::Altered { index, changes } => {
+                let mut start = serializer.serialize_struct_variant("VecDiffType", 0, "Removed", 2)?;
+                start.serialize_field("index", index)?;
+                start.serialize_field("changes", changes)?;
+                start.end()
+            }
+            VecDiffType::Inserted { index, changes } => {
+                let mut start = serializer.serialize_struct_variant("VecDiffType", 0, "Removed", 2)?;
+                start.serialize_field("index", index)?;
+                start.serialize_field("changes", changes)?;
+                start.end()
+            }
+        }
+    }
+}
+
+/// The collection of difference-vec's
+pub struct VecDiff<T: Diff>(pub Vec<VecDiffType<T>>);
+
+impl<T: Diff + PartialEq> Diff for Vec<T> {
     type Repr = VecDiff<T>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
@@ -299,14 +487,53 @@ where
                 break;
             }
         }
-        VecDiff { changes }
+        VecDiff(changes)
     }
 
-    fn apply(&mut self, diff: &Self::Repr) {
+    fn apply(&mut self, _diff: &Self::Repr) {
         todo!();
     }
 
     fn identity() -> Self {
         Vec::new()
+    }
+}
+
+impl<T: Diff> Debug for VecDiff<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_list().entries(self.0.iter()).finish()
+    }
+}
+
+impl<T: Diff> PartialEq for VecDiff<T>
+where
+    T::Repr: PartialEq
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T: Diff> Clone for VecDiff<T>
+where
+    T::Repr: Clone
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+impl<T: Diff> Serialize for VecDiff<T>
+where
+    T::Repr: Serialize
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_newtype_struct("VecDiff", &self.0)    
     }
 }
