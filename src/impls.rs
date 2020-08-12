@@ -1,7 +1,6 @@
 use super::utils::find_match;
 use super::*;
-use serde::{Serialize, Serializer};
-use serde::ser::{SerializeStruct, SerializeStructVariant};
+use serde::{Serialize, Deserialize};
 use std::collections::{HashMap, HashSet};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
@@ -93,6 +92,7 @@ impl Diff for String {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum OptionDiff<T: Diff> {
     Some(T::Repr),
     None,
@@ -176,23 +176,10 @@ where
     }
 }
 
-impl<T: Diff> Serialize for OptionDiff<T>
-where
-    T::Repr: Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            OptionDiff::Some(c) => serializer.serialize_newtype_variant("OptionDiff", 0, "Some", c),
-            OptionDiff::None => serializer.serialize_unit_variant("OptionDiff", 1, "None"),
-            OptionDiff::NoChange => serializer.serialize_unit_variant("OptionDiff", 2, "NoChange"),
-        }
-    }
-}
-
 /// The diff struct used to compare two HashMap's
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "V::Repr: Serialize, K: Serialize"))]
+#[serde(bound(deserialize = "V::Repr: Deserialize<'de>, K: Deserialize<'de>"))]
 pub struct HashMapDiff<K: Hash + Eq, V: Diff> {
     /// Values that are changed or added
     pub altered: HashMap<K, <V as Diff>::Repr>,
@@ -285,23 +272,10 @@ where
     }
 }
 
-impl<K: Eq + Hash, V: Diff> Serialize for HashMapDiff<K, V>
-where
-    K: Serialize,
-    V::Repr: Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let mut start = serializer.serialize_struct("HashMapDiff", 2)?;
-        start.serialize_field("altered", &self.altered)?;
-        start.serialize_field("removed", &self.removed)?;
-        start.end()
-    }
-}
-
 /// The type of change to make to a vec
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T::Repr: Serialize"))]
+#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
 pub enum VecDiffType<T: Diff> {
     Removed { index: usize, len: usize },
     Altered { index: usize, changes: Vec<T::Repr> },
@@ -384,38 +358,10 @@ where
     }
 }
 
-impl<T: Diff> Serialize for VecDiffType<T>
-where
-    T::Repr: Serialize
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer
-    {
-        match self {
-            VecDiffType::Removed { index, len } => {
-                let mut start = serializer.serialize_struct_variant("VecDiffType", 0, "Removed", 2)?;
-                start.serialize_field("index", index)?;
-                start.serialize_field("len", len)?;
-                start.end()
-            }
-            VecDiffType::Altered { index, changes } => {
-                let mut start = serializer.serialize_struct_variant("VecDiffType", 0, "Removed", 2)?;
-                start.serialize_field("index", index)?;
-                start.serialize_field("changes", changes)?;
-                start.end()
-            }
-            VecDiffType::Inserted { index, changes } => {
-                let mut start = serializer.serialize_struct_variant("VecDiffType", 0, "Removed", 2)?;
-                start.serialize_field("index", index)?;
-                start.serialize_field("changes", changes)?;
-                start.end()
-            }
-        }
-    }
-}
-
 /// The collection of difference-vec's
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T::Repr: Serialize"))]
+#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
 pub struct VecDiff<T: Diff>(pub Vec<VecDiffType<T>>);
 
 impl<T: Diff + PartialEq> Diff for Vec<T> {
@@ -551,17 +497,5 @@ where
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
-    }
-}
-
-impl<T: Diff> Serialize for VecDiff<T>
-where
-    T::Repr: Serialize
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer
-    {
-        serializer.serialize_newtype_struct("VecDiff", &self.0)    
     }
 }
