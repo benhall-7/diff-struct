@@ -494,8 +494,32 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
         VecDiff(changes)
     }
 
-    fn apply(&mut self, _diff: &Self::Repr) {
-        todo!();
+    fn apply(&mut self, diff: &Self::Repr) {
+        let mut relative_index = 0_isize;
+        for change in &diff.0 {
+            match change {
+                VecDiffType::Removed { index, len } => {
+                    let index = (*index as isize + relative_index) as usize;
+                    self.drain(index..index + len);
+                    relative_index -= *len as isize;
+                }
+                VecDiffType::Inserted { index, changes } => {
+                    let index = (*index as isize + relative_index) as usize;
+                    self.splice(index..index, changes
+                        .iter()
+                        .map(|d| T::identity().apply_new(d))
+                    );
+                    relative_index += changes.len() as isize;
+                }
+                VecDiffType::Altered { index, changes } => {
+                    let index = (*index as isize + relative_index) as usize;
+                    let range = index..index + changes.len();
+                    for (value, diff) in self[range].iter_mut().zip(changes.iter()) {
+                        value.apply(diff);
+                    }
+                }
+            }
+        }
     }
 
     fn identity() -> Self {

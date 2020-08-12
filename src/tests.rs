@@ -65,7 +65,7 @@ fn test_derive() {
 fn test_vecs() {
     let a = vec![0, 1, 2, 3, 4, 5, 6, 7];
     let b = vec![0, /*1, 2*/ 3, 4, 42, 5, /*6 ->*/ 10, 7];
-    let expected = VecDiff(vec![
+    let diff = VecDiff(vec![
         VecDiffType::Removed { index: 1, len: 2 },
         VecDiffType::Inserted {
             index: 5,
@@ -76,5 +76,6 @@ fn test_vecs() {
             changes: vec![4], // add 4 to 6
         },
     ]);
-    assert_eq!(expected, a.diff(&b));
+    assert_eq!(diff, a.diff(&b));
+    assert_eq!(a.apply_new(&diff), b);
 }
