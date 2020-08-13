@@ -2,15 +2,15 @@
 # It is not intended for manual editing.
 [[package]]
 name = "diff-struct"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "diff_derive 0.1.0",
+ "diff_derive 0.1.1",
  "serde 1.0.114 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "diff_derive"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
