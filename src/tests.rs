@@ -69,6 +69,34 @@ fn test_derive() {
     identity_test(a);
 }
 
+#[derive(Debug, Default, PartialEq, Diff)]
+pub struct ProjectMeta {
+    contributors: Vec<String>,
+    combined_work_hours: usize,
+}
+
+#[test]
+fn test_apply() {
+    let mut base = ProjectMeta::default();
+    let contribution_a = ProjectMeta {
+        contributors: vec!["Alice".into()],
+        combined_work_hours: 3,
+    };
+    let contribution_b = ProjectMeta {
+        contributors: vec!["Bob".into(), "Candice".into()],
+        combined_work_hours: 10,
+    };
+    let expected = ProjectMeta {
+        contributors: vec!["Bob".into(), "Candice".into(), "Alice".into()],
+        combined_work_hours: 13,
+    };
+    let diff_a = base.diff(&contribution_a);
+    let diff_b = base.diff(&contribution_b);
+    base.apply(&diff_a);
+    base.apply(&diff_b);
+    assert_eq!(base, expected);
+}
+
 #[test]
 fn test_vecs() {
     let a = vec![0, 1, 2, 3, 4, 5, 6, 7];
