@@ -26,6 +26,14 @@ fn numeric_diffs() {
 }
 
 #[test]
+fn test_opt() {
+    assert_eq!(Some(10).diff(&Some(15)), OptionDiff::Some(5));
+    assert_eq!(None.apply_new(&OptionDiff::Some(5)), Some(5));
+    assert_eq!(Some(100).apply_new(&OptionDiff::None), None);
+    identity_test(Some(42))
+}
+
+#[test]
 fn test_maps() {
     let a = generate_map(vec![("a", 1), ("b", 2), ("x", 42)]);
     let b = generate_map(vec![("b", 3), ("c", 4), ("x", 42)]);

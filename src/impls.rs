@@ -120,11 +120,11 @@ impl<T: Diff + PartialEq> Diff for Option<T> {
     fn apply(&mut self, diff: &Self::Repr) {
         match diff {
             OptionDiff::None => *self = None,
-            OptionDiff::Some(diff_value) => {
+            OptionDiff::Some(change) => {
                 if let Some(value) = self {
-                    value.apply(diff_value);
+                    value.apply(change);
                 } else {
-                    T::identity().apply(diff_value);
+                    *self = Some(T::identity().apply_new(change))
                 }
             }
             _ => {}
