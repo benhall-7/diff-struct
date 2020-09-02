@@ -70,6 +70,28 @@ macro_rules! diff_float {
 diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 diff_float!(f32, f64);
 
+impl Diff for char {
+    type Repr = Option<char>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        if self != other {
+            Some(other.clone())
+        } else {
+            None
+        }
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(diff) = diff {
+            *self = diff.clone()
+        }
+    }
+
+    fn identity() -> Self {
+        '\x00'
+    }
+}
+
 impl Diff for String {
     type Repr = Option<String>;
 

@@ -26,6 +26,16 @@ fn numeric_diffs() {
 }
 
 #[test]
+fn test_char_string() {
+    identity_test('b');
+    identity_test(String::from("42"));
+    assert_eq!('b'.diff(&'c'), Some('c'));
+    assert_eq!('b'.diff(&'b'), None);
+    assert_eq!(String::from("42").diff(&String::from("asdf")), Some(String::from("asdf")));
+    assert_eq!(String::from("42").diff(&String::from("42")), None);
+}
+
+#[test]
 fn test_opt() {
     assert_eq!(Some(10).diff(&Some(15)), OptionDiff::Some(5));
     assert_eq!(None.apply_new(&OptionDiff::Some(5)), Some(5));
