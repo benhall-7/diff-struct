@@ -42,7 +42,7 @@ fn test_apply() {
 
 ## In action
 
-* `motion_lib`: a modding tool for the proprietary motion_lib.bin filetype in SSBU. Utilizing this crate, the project features functions for producing file differences as serialized yaml. With this functionality, users can determine quickly what changes were made to the regular file across game updates, and apply those changes to their modded files to keep them up to date. Vise versa, they can apply their modded file's diffs to the new version of the file to achieve the same result.
+* [motion_lib](https://github.com/ultimate-research/motion_lib): a modding tool for the proprietary motion_lib.bin filetype in SSBU. Utilizing this crate, the project features functions for producing file differences as serialized yaml. With this functionality, users can determine quickly what changes were made to the regular file across game updates, and apply those changes to their modded files to keep them up to date. Vise versa, they can apply their modded file's diffs to the new version of the file to achieve the same result.
 
 ## In theory
 
