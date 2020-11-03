@@ -2,7 +2,7 @@
 
 A Rust trait for diffing and applying diffs between data structures. Features a derive macro.
 
-Abstractly speaking, a 'diff' between two structs `A` and `B` can be considered the change necessary to make to `A` to produce `B`. Succinctly we describe this rule as `A --> B = D and A <-- D = B`
+Abstractly speaking, a 'diff' between two structs `A` and `B` can be considered the change necessary to make to `A` to produce `B`. Succinctly, the pattern can be written as `A -> B = D and A <- D = B`
 
 Diff is automatically derived on bools, numerals, Option's, HashMap's, and Vec's (provided the types they contain also implement Diff). The implementation of diffing Vec's is non-standard. It is faster and simpler than Myer's algorithm, but more error-prone on lists with many nearby duplicate elements.
 
