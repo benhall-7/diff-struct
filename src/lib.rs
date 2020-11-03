@@ -29,16 +29,6 @@ pub trait Diff: Sized {
         visitor.apply(self, diff)
     }
 
-    /// The identity element of the struct
-    /// ```
-    /// use diff::Diff;
-    /// let s = 42;
-    /// let i = <i32 as Diff>::identity();
-    /// assert_eq!(i.apply_new(&i.diff(&s)), s);
-    /// ```
-    /// or mathematically speaking, `i + (s - i) = s`
-    fn identity() -> Self;
-
     /// Applies the diff to the struct and produces a new struct
     fn apply_new(&self, diff: &Self::Repr) -> Self {
         let mut new = Self::identity();
@@ -54,6 +44,16 @@ pub trait Diff: Sized {
         new.apply_custom(diff, visitor);
         new
     }
+
+    /// The identity element of the struct
+    /// ```
+    /// use diff::Diff;
+    /// let s = 42;
+    /// let i = <i32 as Diff>::identity();
+    /// assert_eq!(i.apply_new(&i.diff(&s)), s);
+    /// ```
+    /// or mathematically speaking, `i + (s - i) = s`
+    fn identity() -> Self;
 }
 
 /// A trait allowing a struct to handle a diffing implementation between
