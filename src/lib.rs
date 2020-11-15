@@ -56,7 +56,7 @@ pub trait Diff: Sized {
     fn identity() -> Self;
 }
 
-/// A trait allowing a struct to handle a diffing implementation between
+/// A trait allowing a custom struct to handle the diffing implementation for a type
 pub trait Differ<T> {
     type Repr;
 

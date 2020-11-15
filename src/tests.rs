@@ -79,6 +79,20 @@ fn test_derive() {
     identity_test(a);
 }
 
+#[derive(Debug, PartialEq, Diff)]
+#[diff(attr(
+    #[derive(Debug, PartialEq)]
+))]
+struct TestTupleStruct(i32);
+
+#[test]
+fn test_tuple_derive() {
+    let a = TestTupleStruct(10);
+    let b = TestTupleStruct(30);
+    let diff = TestTupleStructDiff(20);
+    assert_eq!(a.diff(&b), diff);
+}
+
 #[derive(Debug, Default, PartialEq, Diff)]
 pub struct ProjectMeta {
     contributors: Vec<String>,
