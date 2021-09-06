@@ -12,6 +12,13 @@ pub struct Basic {
     pub unit: Unit,
 }
 
+#[derive(Clone, Arbitrary, Diff, Eq, PartialEq, Debug)]
+pub enum Enum {
+    VarUnit,
+    VarNamed{a: u32, b: u32},
+    VarUnnamed(u32, u32),
+}
+
 fn tester<T>(mut a: T, b: T) -> bool
     where T: Diff + Eq
 {
@@ -21,6 +28,11 @@ fn tester<T>(mut a: T, b: T) -> bool
 }
 
 #[test]
-fn test() {
+fn test_basic() {
     quickcheck(tester as fn(Basic, Basic) -> bool);
+}
+
+#[test]
+fn test_enum() {
+    quickcheck(tester as fn(Enum, Enum) -> bool);
 }
