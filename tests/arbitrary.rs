@@ -16,7 +16,7 @@ pub struct Basic {
 pub enum Enum {
     VarUnit,
     VarNamed{a: u32, b: u32},
-    VarUnnamed(u32, u32),
+    VarUnnamed(u32, Basic),
 }
 
 fn tester<T>(mut a: T, b: T) -> bool
