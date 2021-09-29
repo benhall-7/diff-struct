@@ -12,5 +12,14 @@ name = "diff"
 path = "src/lib.rs"
 
 [dependencies]
-diff_derive =  { path = "../diff-derive", version = "0.1" }
+diff_derive = { path = "../diff-derive", version = "0.1" }
 serde = { version = "1", features = [ "derive" ] }
+
+[dev-dependencies]
+serde_derive = "1"
+serde = "1"
+quickcheck = "0.8"
+quickcheck_macros = "0.8"
+quickcheck_derive = "0.3"
+rand = "0.6"
+diff_derive = { path = "../diff-derive", version = "0.1" }
