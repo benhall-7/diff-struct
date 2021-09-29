@@ -1,7 +1,8 @@
 use quickcheck::quickcheck;
 use quickcheck_derive::Arbitrary;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use diff::Diff;
+use std::sync::Arc;
 
 #[derive(Clone, Arbitrary, Diff, Eq, PartialEq, Debug)]
 pub struct Unit;
@@ -9,6 +10,9 @@ pub struct Unit;
 #[derive(Clone, Arbitrary, Diff, Eq, PartialEq, Debug)]
 pub struct Basic {
     pub items: HashMap<u16, Vec<u8>>,
+    pub items_b: BTreeMap<u16, Vec<u8>>,
+    pub tuple: (u32, u16),
+    pub arc: Arc<String>,
     pub unit: Unit,
 }
 
