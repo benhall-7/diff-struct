@@ -316,12 +316,12 @@ where
                 .field("len", len)
                 .finish(),
             VecDiffType::Altered { index, changes } => f
-                .debug_struct("Removed")
+                .debug_struct("Altered")
                 .field("index", index)
                 .field("changes", changes)
                 .finish(),
             VecDiffType::Inserted { index, changes } => f
-                .debug_struct("Removed")
+                .debug_struct("Inserted")
                 .field("index", index)
                 .field("changes", changes)
                 .finish(),
