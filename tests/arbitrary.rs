@@ -28,7 +28,7 @@ fn tester<T>(mut a: T, b: T) -> bool
 {
     let diff = a.diff(&b);
     a.apply(&diff);
-    return a == b;
+    a == b
 }
 
 #[test]

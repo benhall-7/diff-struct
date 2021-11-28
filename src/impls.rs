@@ -143,7 +143,7 @@ impl Diff for char {
 
     fn diff(&self, other: &Self) -> Self::Repr {
         if self != other {
-            Some(other.clone())
+            Some(*other)
         } else {
             None
         }
@@ -151,7 +151,7 @@ impl Diff for char {
 
     fn apply(&mut self, diff: &Self::Repr) {
         if let Some(diff) = diff {
-            *self = diff.clone()
+            *self = *diff
         }
     }
 
