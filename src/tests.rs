@@ -59,6 +59,7 @@ fn test_maps() {
 #[diff(attr(
     #[derive(Debug, PartialEq)]
 ))]
+#[diff(name(TestDiff))]
 struct TestStruct {
     a: bool,
     b: u32,
@@ -70,7 +71,7 @@ fn test_derive() {
 
     let b = TestStruct { a: true, b: 43 };
 
-    let diff = TestStructDiff {
+    let diff = TestDiff {
         a: true.into(),
         b: 1,
     };
@@ -94,6 +95,7 @@ fn test_tuple_derive() {
 }
 
 #[derive(Debug, Default, PartialEq, Diff)]
+#[diff(visibility(pub))]
 pub struct ProjectMeta {
     contributors: Vec<String>,
     combined_work_hours: usize,
