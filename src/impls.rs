@@ -266,7 +266,7 @@ where
     }
 }
 
-/// The diff struct used to compare two HashMap's
+/// The diff struct used to compare two [HashMap]'s
 #[derive(Serialize, Deserialize)]
 #[serde(bound(serialize = "V::Repr: Serialize, K: Serialize"))]
 #[serde(bound(deserialize = "V::Repr: Deserialize<'de>, K: Deserialize<'de>"))]
@@ -277,7 +277,7 @@ pub struct HashMapDiff<K: Hash + Eq, V: Diff> {
     pub removed: HashSet<K>,
 }
 
-/// The diff struct used to compare two HashMap's
+/// The diff struct used to compare two [BTreeMap]'s
 #[derive(Serialize, Deserialize)]
 #[serde(bound(serialize = "V::Repr: Serialize, K: Serialize"))]
 #[serde(bound(deserialize = "V::Repr: Deserialize<'de>, K: Deserialize<'de>"))]
@@ -494,7 +494,7 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
                         index: pos_x,
                         changes: other[pos_y..pos_y + insertions]
                             .iter()
-                            .map(|new| T::identity().diff(&new))
+                            .map(|new| T::identity().diff(new))
                             .collect(),
                     });
                 }
@@ -504,7 +504,7 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
                     changes: self[pos_x..pos_x + deletions]
                         .iter()
                         .zip(other[pos_y..pos_y + insertions].iter())
-                        .map(|(a, b)| a.diff(&b))
+                        .map(|(a, b)| a.diff(b))
                         .collect(),
                 });
             } else if deletions > insertions {
@@ -513,7 +513,7 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
                     changes: self[pos_x..pos_x + insertions]
                         .iter()
                         .zip(other[pos_y..pos_y + insertions].iter())
-                        .map(|(a, b)| a.diff(&b))
+                        .map(|(a, b)| a.diff(b))
                         .collect(),
                 });
                 changes.push(VecDiffType::Removed {
@@ -526,14 +526,14 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
                     changes: self[pos_x..pos_x + deletions]
                         .iter()
                         .zip(other[pos_y..pos_y + deletions].iter())
-                        .map(|(a, b)| a.diff(&b))
+                        .map(|(a, b)| a.diff(b))
                         .collect(),
                 });
                 changes.push(VecDiffType::Inserted {
                     index: pos_x + deletions,
                     changes: other[pos_y + deletions..pos_y + insertions]
                         .iter()
-                        .map(|new| T::identity().diff(&new))
+                        .map(|new| T::identity().diff(new))
                         .collect(),
                 });
             }
