@@ -31,7 +31,10 @@ fn test_char_string() {
     identity_test(String::from("42"));
     assert_eq!('b'.diff(&'c'), Some('c'));
     assert_eq!('b'.diff(&'b'), None);
-    assert_eq!(String::from("42").diff(&String::from("asdf")), Some(String::from("asdf")));
+    assert_eq!(
+        String::from("42").diff(&String::from("asdf")),
+        Some(String::from("asdf"))
+    );
     assert_eq!(String::from("42").diff(&String::from("42")), None);
 }
 
@@ -96,7 +99,7 @@ fn test_tuple_derive() {
 
 #[derive(Debug, Default, PartialEq, Diff)]
 #[diff(visibility(pub))]
-pub struct ProjectMeta {
+struct ProjectMeta {
     contributors: Vec<String>,
     combined_work_hours: usize,
 }
@@ -140,4 +143,29 @@ fn test_vecs() {
     ]);
     assert_eq!(diff, a.diff(&b));
     assert_eq!(a.apply_new(&diff), b);
+}
+use serde::Serialize;
+
+#[derive(Default, PartialEq, Serialize, Diff)]
+#[diff(name(SpecialName))]
+#[diff(visibility(pub))]
+#[diff(attr(
+    #[derive(Default, PartialEq, Serialize)]
+))]
+struct MyTestStruct {
+    #[diff(name(special_field_name))]
+    #[diff(visibility(pub))]
+    #[diff(attr(
+        #[serde(rename = "name")]
+    ))]
+    test_field: u32,
+}
+
+#[test]
+fn test_full_struct() {
+    let base = MyTestStruct::default();
+    let other = MyTestStruct { test_field: 1 };
+
+    let diff = base.diff(&other);
+    assert_eq!(diff.special_field_name, 1);
 }
