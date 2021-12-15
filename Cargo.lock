@@ -40,7 +40,7 @@ dependencies = [
 
 [[package]]
 name = "diff-struct"
-version = "0.3.1"
+version = "0.4.0"
 dependencies = [
  "diff_derive",
  "quickcheck",
@@ -53,7 +53,7 @@ dependencies = [
 
 [[package]]
 name = "diff_derive"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "proc-macro2 1.0.19",
  "quote 1.0.7",
