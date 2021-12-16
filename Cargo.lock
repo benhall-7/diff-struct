@@ -54,8 +54,6 @@ dependencies = [
 [[package]]
 name = "diff_derive"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a172f64d18b45c6ee85f07fce93b25bae44495db0cbc2694c1a6c875226c4e7a"
 dependencies = [
  "proc-macro2 1.0.34",
  "quote 1.0.10",
