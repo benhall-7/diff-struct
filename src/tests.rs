@@ -152,12 +152,14 @@ use serde::Serialize;
 #[diff(attr(
     #[derive(Default, PartialEq, Serialize)]
 ))]
+/// A struct with a lot of attributes
 struct MyTestStruct {
     #[diff(name(special_field_name))]
     #[diff(visibility(pub))]
     #[diff(attr(
         #[serde(rename = "name")]
     ))]
+    /// This field has a lot of attributes too
     test_field: u32,
 }
 
