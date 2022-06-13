@@ -1,11 +1,11 @@
 use super::utils::find_match;
 use super::*;
-use serde::{Serialize, Deserialize};
-use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
-use std::sync::Arc;
 use std::ops::Deref;
+use std::sync::Arc;
 
 impl Diff for bool {
     type Repr = Option<bool>;
@@ -30,7 +30,8 @@ impl Diff for bool {
 }
 
 impl<T> Diff for Arc<T>
-    where T: Diff + Clone
+where
+    T: Diff + Clone,
 {
     type Repr = T::Repr;
 
@@ -85,15 +86,42 @@ diff_tuple!((A, B, C, D, F, G), (0, 1, 2, 3, 4, 5));
 diff_tuple!((A, B, C, D, F, G, H), (0, 1, 2, 3, 4, 5, 6));
 diff_tuple!((A, B, C, D, F, G, H, I), (0, 1, 2, 3, 4, 5, 6, 7));
 diff_tuple!((A, B, C, D, F, G, H, I, J), (0, 1, 2, 3, 4, 5, 6, 7, 8));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R, S), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17));
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R, S),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)
+);
 
 macro_rules! diff_int {
     ($($ty:ty),*) => {
@@ -185,9 +213,15 @@ impl Diff for String {
 #[derive(Serialize, Deserialize)]
 pub enum OptionDiff<T: Diff> {
     Some(T::Repr),
+    New(T),
     None,
-    NoChange,
+    Same,
 }
+
+// None -> None = NoChange
+// None -> Some = New(T)
+// Some -> None = None
+// Some -> Some = either NoChange or Some(T::Diff)
 
 impl<T: Diff + PartialEq> Diff for Option<T> {
     type Repr = OptionDiff<T>;
@@ -196,14 +230,16 @@ impl<T: Diff + PartialEq> Diff for Option<T> {
         match (self, other) {
             (Some(value), Some(other_value)) => {
                 if value == other_value {
-                    OptionDiff::NoChange
+                    OptionDiff::Same
                 } else {
                     OptionDiff::Some(value.diff(other_value))
                 }
             }
             (Some(_), None) => OptionDiff::None,
-            (None, Some(other_value)) => OptionDiff::Some(T::identity().diff(other_value)),
-            (None, None) => OptionDiff::NoChange,
+            (None, Some(other_value)) => {
+                OptionDiff::New(T::identity().apply_new(&T::identity().diff(other_value)))
+            }
+            (None, None) => OptionDiff::Same,
         }
     }
 
@@ -234,7 +270,7 @@ where
         match &self {
             OptionDiff::Some(change) => f.debug_tuple("Some").field(change).finish(),
             OptionDiff::None => write!(f, "None"),
-            OptionDiff::NoChange => write!(f, "NoChange"),
+            OptionDiff::Same => write!(f, "NoChange"),
         }
     }
 }
@@ -247,7 +283,7 @@ where
         match (self, other) {
             (OptionDiff::Some(a), OptionDiff::Some(b)) => a == b,
             (OptionDiff::None, OptionDiff::None) => true,
-            (OptionDiff::NoChange, OptionDiff::NoChange) => true,
+            (OptionDiff::Same, OptionDiff::Same) => true,
             _ => false,
         }
     }
@@ -261,7 +297,7 @@ where
         match self {
             OptionDiff::Some(a) => OptionDiff::Some(a.clone()),
             OptionDiff::None => OptionDiff::None,
-            OptionDiff::NoChange => OptionDiff::NoChange,
+            OptionDiff::Same => OptionDiff::Same,
         }
     }
 }
@@ -449,19 +485,22 @@ where
 
 impl<T: Diff> Clone for VecDiffType<T>
 where
-    T::Repr: Clone
+    T::Repr: Clone,
 {
     fn clone(&self) -> Self {
         match self {
-            VecDiffType::Removed { index, len } => {
-                VecDiffType::Removed { index: *index, len: *len }
-            }
-            VecDiffType::Altered { index, changes } => {
-                VecDiffType::Altered { index: *index, changes: changes.clone() }
-            }
-            VecDiffType::Inserted { index, changes } => {
-                VecDiffType::Inserted { index: *index, changes: changes.clone() }
-            }
+            VecDiffType::Removed { index, len } => VecDiffType::Removed {
+                index: *index,
+                len: *len,
+            },
+            VecDiffType::Altered { index, changes } => VecDiffType::Altered {
+                index: *index,
+                changes: changes.clone(),
+            },
+            VecDiffType::Inserted { index, changes } => VecDiffType::Inserted {
+                index: *index,
+                changes: changes.clone(),
+            },
         }
     }
 }
@@ -559,9 +598,9 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
                 }
                 VecDiffType::Inserted { index, changes } => {
                     let index = (*index as isize + relative_index) as usize;
-                    self.splice(index..index, changes
-                        .iter()
-                        .map(|d| T::identity().apply_new(d))
+                    self.splice(
+                        index..index,
+                        changes.iter().map(|d| T::identity().apply_new(d)),
                     );
                     relative_index += changes.len() as isize;
                 }
@@ -592,7 +631,7 @@ where
 
 impl<T: Diff> PartialEq for VecDiff<T>
 where
-    T::Repr: PartialEq
+    T::Repr: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
@@ -601,7 +640,7 @@ where
 
 impl<T: Diff> Clone for VecDiff<T>
 where
-    T::Repr: Clone
+    T::Repr: Clone,
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())

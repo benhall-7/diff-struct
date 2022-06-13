@@ -45,6 +45,13 @@ pub trait Diff: Sized {
         new
     }
 
+    /// Produces a clone of the object by using the diff between self and the identity element
+    fn diff_clone(&self) -> Self {
+        let mut new = Self::identity();
+        new.apply(&new.diff(self));
+        new
+    }
+
     /// The identity element of the struct
     /// ```
     /// use diff::Diff;
@@ -54,6 +61,7 @@ pub trait Diff: Sized {
     /// ```
     /// or mathematically speaking, `i + (s - i) = s`
     fn identity() -> Self;
+
 }
 
 /// A trait allowing a custom struct to handle the diffing implementation for a type
