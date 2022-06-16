@@ -166,6 +166,37 @@ macro_rules! diff_float {
 }
 
 diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+
+macro_rules! diff_non_zero_int {
+    ($($ty:ty, $original:ty),*) => {
+        $(impl Diff for $ty {
+            type Repr = $original;
+
+            fn diff(&self, other: &Self) -> Self::Repr {
+                other.get().wrapping_sub(self.get())
+            }
+
+            fn apply(&mut self, diff: &Self::Repr) {
+                *self = <$ty>::new(self.get() + *diff).unwrap();
+            }
+
+            fn identity() -> $ty {
+                use num::traits::One;
+                <$ty>::new(<$original>::one()).unwrap()
+            }
+        })*
+    };
+}
+use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
+
+diff_non_zero_int!(NonZeroU8, u8);
+diff_non_zero_int!(NonZeroU16, u16);
+diff_non_zero_int!(NonZeroU32, u32);
+diff_non_zero_int!(NonZeroU64, u64);
+diff_non_zero_int!(NonZeroU128, u128);
+diff_non_zero_int!(NonZeroUsize, usize);
+
+diff_int!();
 diff_float!(f32, f64);
 
 impl Diff for char {

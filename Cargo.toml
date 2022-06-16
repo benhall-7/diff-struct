@@ -13,6 +13,7 @@ path = "src/lib.rs"
 
 [dependencies]
 diff_derive = { version = "0.2" }
+num = "0.4.0"
 serde = { version = "1", features = [ "derive" ] }
 
 [dev-dependencies]
