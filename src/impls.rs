@@ -652,12 +652,35 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
 pub enum ArrayDiffType<T: Diff> {
     Altered { index: usize, changes: Vec<T::Repr> },
 }
+impl<T: Diff> Debug for ArrayDiffType<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            Self::Altered { index, changes } => f
+                .debug_struct("Altered")
+                .field("index", index)
+                .field("changes", changes)
+                .finish(),
+        }
+    }
+}
 
 /// The collection of difference-vec's
 #[derive(Serialize, Deserialize)]
 #[serde(bound(serialize = "T::Repr: Serialize"))]
 #[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
 pub struct ArrayDiff<T: Diff>(pub Vec<ArrayDiffType<T>>);
+
+impl<T: Diff> Debug for ArrayDiff<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_list().entries(self.0.iter()).finish()
+    }
+}
 
 impl<const N: usize, T: Default + Debug + Diff + PartialEq> Diff for [T; N] {
     type Repr = ArrayDiff<T>;
