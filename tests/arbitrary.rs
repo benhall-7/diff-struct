@@ -1,7 +1,9 @@
+#![allow(clippy::unused_unit)]
+
+use diff::Diff;
 use quickcheck::quickcheck;
 use quickcheck_derive::Arbitrary;
 use std::collections::{BTreeMap, HashMap};
-use diff::Diff;
 use std::sync::Arc;
 
 #[derive(Clone, Arbitrary, Diff, Eq, PartialEq, Debug)]
@@ -19,12 +21,13 @@ pub struct Basic {
 #[derive(Clone, Arbitrary, Diff, Eq, PartialEq, Debug)]
 pub enum Enum {
     VarUnit,
-    VarNamed{a: u32, b: u32},
+    VarNamed { a: u32, b: u32 },
     VarUnnamed(u32, Basic),
 }
 
 fn tester<T>(mut a: T, b: T) -> bool
-    where T: Diff + Eq
+where
+    T: Diff + Eq,
 {
     let diff = a.diff(&b);
     a.apply(&diff);
