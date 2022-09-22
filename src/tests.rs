@@ -12,6 +12,10 @@ fn generate_map<K: Eq + Hash, V>(parts: Vec<(K, V)>) -> HashMap<K, V> {
     parts.into_iter().collect::<HashMap<_, _>>()
 }
 
+fn generate_set<T: Eq + Hash>(parts: Vec<T>) -> HashSet<T> {
+    parts.into_iter().collect::<HashSet<_, _>>()
+}
+
 #[test]
 fn numeric_diffs() {
     identity_test(true);
@@ -56,6 +60,24 @@ fn test_maps() {
     };
     assert_eq!(a.diff(&b), expected);
     identity_test(a);
+}
+
+#[test]
+fn test_sets() {
+    let a = generate_set(vec![1, 2, 42]);
+    identity_test(a.clone());
+
+    let b = generate_set(vec![1, 4, 42]);
+    let diff = a.diff(&b);
+    let expected = HashSetDiff {
+        added: vec![4].into_iter().collect::<HashSet<_>>(),
+        removed: vec![2].into_iter().collect::<HashSet<_>>(),
+    };
+    assert_eq!(diff, expected);
+
+    let mut a_plus_diff = a;
+    a_plus_diff.apply(&diff);
+    assert_eq!(a_plus_diff, b);
 }
 
 #[derive(Debug, PartialEq, Diff)]
