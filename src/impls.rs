@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::ops::Deref;
 
@@ -179,6 +180,28 @@ impl Diff for String {
 
     fn identity() -> Self {
         String::new()
+    }
+}
+
+impl Diff for PathBuf {
+    type Repr = Option<PathBuf>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        if self != other {
+            Some(other.clone())
+        } else {
+            None
+        }
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(diff) = diff {
+            *self = diff.clone()
+        }
+    }
+
+    fn identity() -> Self {
+        PathBuf::new()
     }
 }
 
