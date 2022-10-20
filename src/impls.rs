@@ -380,6 +380,107 @@ macro_rules! diff_map {
 diff_map!(HashMap, HashMapDiff, HashSet, (Hash + Eq));
 diff_map!(BTreeMap, BTreeMapDiff, BTreeSet, (Ord));
 
+/// The diff struct used to compare two [HashSet]'s
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T: Serialize"))]
+#[serde(bound(deserialize = "T: Deserialize<'de>"))]
+pub struct HashSetDiff<T: Hash + Eq> {
+    /// Values that are added
+    pub added: HashSet<T>,
+    /// Values that are removed
+    pub removed: HashSet<T>,
+}
+
+/// The diff struct used to compare two [BTreeMap]'s
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T: Serialize"))]
+#[serde(bound(deserialize = "T: Deserialize<'de>"))]
+pub struct BTreeSetDiff<T: Ord + Eq> {
+    /// Values that are added
+    pub added: BTreeSet<T>,
+    /// Values that are removed
+    pub removed: BTreeSet<T>,
+}
+
+macro_rules! diff_set {
+    ($ty: ident, $diffty: ident, $diffkey: ident, ($($constraints:tt)*)) => {
+        impl<T: $($constraints)*> Diff for $ty<T>
+        where
+            T: Clone,
+        {
+            type Repr = $diffty<T>;
+
+            fn diff(&self, other: &Self) -> Self::Repr {
+                let mut diff = $diffty {
+                    added: $diffkey::new(),
+                    removed: $diffkey::new(),
+                };
+                for value in self {
+                    if !other.contains(value) {
+                        diff.removed.insert(value.clone());
+                    }
+                }
+                for value in other {
+                    if !self.contains(value) {
+                        diff.added.insert(value.clone());
+                    }
+                }
+                diff
+            }
+
+            // basically inexpensive
+            fn apply(&mut self, diff: &Self::Repr) {
+                diff.removed.iter().for_each(|del| {
+                    self.remove(del);
+                });
+                diff.added.iter().for_each(|add| {
+                    self.insert(add.clone());
+                });
+            }
+
+            fn identity() -> Self {
+                $ty::new()
+            }
+        }
+
+        impl<T: $($constraints)*> Debug for $diffty<T>
+        where
+            T: Debug,
+        {
+            fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+                f.debug_struct(stringify!($diffty))
+                    .field("added", &self.added)
+                    .field("removed", &self.removed)
+                    .finish()
+            }
+        }
+
+        impl<T: $($constraints)*> PartialEq for $diffty<T>
+        where
+            T: PartialEq,
+        {
+            fn eq(&self, other: &Self) -> bool {
+                self.added == other.added && self.removed == other.removed
+            }
+        }
+
+        impl<T: $($constraints)*> Clone for $diffty<T>
+        where
+            T: Clone,
+        {
+            fn clone(&self) -> Self {
+                $diffty {
+                    added: self.added.clone(),
+                    removed: self.removed.clone(),
+                }
+            }
+        }
+    }
+}
+
+diff_set!(HashSet, HashSetDiff, HashSet, (Hash + Eq));
+diff_set!(BTreeSet, BTreeSetDiff, BTreeSet, (Ord));
+
 /// The type of change to make to a vec
 #[derive(Serialize, Deserialize)]
 #[serde(bound(serialize = "T::Repr: Serialize"))]
