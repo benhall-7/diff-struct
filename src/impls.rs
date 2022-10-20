@@ -1,12 +1,14 @@
 use super::utils::find_match;
 use super::*;
-use serde::{Serialize, Deserialize};
-use std::collections::{HashMap, HashSet, BTreeMap, BTreeSet};
+use serde::{Deserialize, Serialize};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::convert::TryInto;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
+use std::iter;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::ops::Deref;
 
 impl Diff for bool {
     type Repr = Option<bool>;
@@ -31,7 +33,8 @@ impl Diff for bool {
 }
 
 impl<T> Diff for Arc<T>
-    where T: Diff + Clone
+where
+    T: Diff + Clone,
 {
     type Repr = T::Repr;
 
@@ -86,15 +89,42 @@ diff_tuple!((A, B, C, D, F, G), (0, 1, 2, 3, 4, 5));
 diff_tuple!((A, B, C, D, F, G, H), (0, 1, 2, 3, 4, 5, 6));
 diff_tuple!((A, B, C, D, F, G, H, I), (0, 1, 2, 3, 4, 5, 6, 7));
 diff_tuple!((A, B, C, D, F, G, H, I, J), (0, 1, 2, 3, 4, 5, 6, 7, 8));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
-diff_tuple!((A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R, S), (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17));
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+);
+diff_tuple!(
+    (A, B, C, D, F, G, H, I, J, K, L, M, N, O, P, Q, R, S),
+    (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)
+);
 
 macro_rules! diff_int {
     ($($ty:ty),*) => {
@@ -137,6 +167,37 @@ macro_rules! diff_float {
 }
 
 diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
+
+macro_rules! diff_non_zero_int {
+    ($($ty:ty, $original:ty),*) => {
+        $(impl Diff for $ty {
+            type Repr = $original;
+
+            fn diff(&self, other: &Self) -> Self::Repr {
+                other.get().wrapping_sub(self.get())
+            }
+
+            fn apply(&mut self, diff: &Self::Repr) {
+                *self = <$ty>::new(self.get() + *diff).unwrap();
+            }
+
+            fn identity() -> $ty {
+                use num::traits::One;
+                <$ty>::new(<$original>::one()).unwrap()
+            }
+        })*
+    };
+}
+use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
+
+diff_non_zero_int!(NonZeroU8, u8);
+diff_non_zero_int!(NonZeroU16, u16);
+diff_non_zero_int!(NonZeroU32, u32);
+diff_non_zero_int!(NonZeroU64, u64);
+diff_non_zero_int!(NonZeroU128, u128);
+diff_non_zero_int!(NonZeroUsize, usize);
+
+diff_int!();
 diff_float!(f32, f64);
 
 impl Diff for char {
@@ -595,19 +656,22 @@ where
 
 impl<T: Diff> Clone for VecDiffType<T>
 where
-    T::Repr: Clone
+    T::Repr: Clone,
 {
     fn clone(&self) -> Self {
         match self {
-            VecDiffType::Removed { index, len } => {
-                VecDiffType::Removed { index: *index, len: *len }
-            }
-            VecDiffType::Altered { index, changes } => {
-                VecDiffType::Altered { index: *index, changes: changes.clone() }
-            }
-            VecDiffType::Inserted { index, changes } => {
-                VecDiffType::Inserted { index: *index, changes: changes.clone() }
-            }
+            VecDiffType::Removed { index, len } => VecDiffType::Removed {
+                index: *index,
+                len: *len,
+            },
+            VecDiffType::Altered { index, changes } => VecDiffType::Altered {
+                index: *index,
+                changes: changes.clone(),
+            },
+            VecDiffType::Inserted { index, changes } => VecDiffType::Inserted {
+                index: *index,
+                changes: changes.clone(),
+            },
         }
     }
 }
@@ -705,9 +769,9 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
                 }
                 VecDiffType::Inserted { index, changes } => {
                     let index = (*index as isize + relative_index) as usize;
-                    self.splice(index..index, changes
-                        .iter()
-                        .map(|d| T::identity().apply_new(d))
+                    self.splice(
+                        index..index,
+                        changes.iter().map(|d| T::identity().apply_new(d)),
                     );
                     relative_index += changes.len() as isize;
                 }
@@ -727,6 +791,85 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
     }
 }
 
+/// The type of change to make to a vec
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T::Repr: Serialize"))]
+#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
+pub enum ArrayDiffType<T: Diff> {
+    Altered { index: usize, changes: Vec<T::Repr> },
+}
+impl<T: Diff> Debug for ArrayDiffType<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            Self::Altered { index, changes } => f
+                .debug_struct("Altered")
+                .field("index", index)
+                .field("changes", changes)
+                .finish(),
+        }
+    }
+}
+
+/// The collection of difference-vec's
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T::Repr: Serialize"))]
+#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
+pub struct ArrayDiff<T: Diff>(pub Vec<ArrayDiffType<T>>);
+
+impl<T: Diff> Debug for ArrayDiff<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_list().entries(self.0.iter()).finish()
+    }
+}
+
+impl<const N: usize, T: Default + Debug + Diff + PartialEq> Diff for [T; N] {
+    type Repr = ArrayDiff<T>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        ArrayDiff(
+            self.iter()
+                .zip(other.iter())
+                .enumerate()
+                .filter_map(|(index, (self_el, other_el))| {
+                    self_el.ne(other_el).then(|| ArrayDiffType::Altered {
+                        index,
+                        changes: vec![self_el.diff(other_el)],
+                    })
+                })
+                .collect(),
+        )
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        let relative_index = 0_isize;
+        for change in &diff.0 {
+            match change {
+                ArrayDiffType::Altered { index, changes } => {
+                    let index = (*index as isize + relative_index) as usize;
+                    let range = index..index + changes.len();
+                    for (value, diff) in self[range].iter_mut().zip(changes.iter()) {
+                        value.apply(diff);
+                    }
+                }
+            }
+        }
+    }
+
+    fn identity() -> Self {
+        iter::repeat_with(T::default)
+            .take(N)
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap()
+    }
+}
+
 impl<T: Diff> Debug for VecDiff<T>
 where
     T::Repr: Debug,
@@ -738,7 +881,7 @@ where
 
 impl<T: Diff> PartialEq for VecDiff<T>
 where
-    T::Repr: PartialEq
+    T::Repr: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
@@ -747,7 +890,7 @@ where
 
 impl<T: Diff> Clone for VecDiff<T>
 where
-    T::Repr: Clone
+    T::Repr: Clone,
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
