@@ -3,6 +3,7 @@ use super::*;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::path::PathBuf;
 
 fn identity_test<D: Diff + Debug + PartialEq>(s: D) {
     assert_eq!(D::identity().apply_new(&D::identity().diff(&s)), s);
@@ -78,6 +79,17 @@ fn test_sets() {
     let mut a_plus_diff = a;
     a_plus_diff.apply(&diff);
     assert_eq!(a_plus_diff, b);
+}
+
+#[test]
+fn test_path() {
+    let a = PathBuf::from(r"/example/path/to/file.ext");
+    let b = PathBuf::from(r"/different/path");
+    identity_test(a.clone());
+    assert_eq!(
+        a.diff(&b),
+        Some(b.clone())
+    );
 }
 
 #[derive(Debug, PartialEq, Diff)]
