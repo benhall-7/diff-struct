@@ -86,10 +86,7 @@ fn test_path() {
     let a = PathBuf::from(r"/example/path/to/file.ext");
     let b = PathBuf::from(r"/different/path");
     identity_test(a.clone());
-    assert_eq!(
-        a.diff(&b),
-        Some(b.clone())
-    );
+    assert_eq!(a.diff(&b), Some(b.clone()));
 }
 
 #[derive(Debug, PartialEq, Diff)]

@@ -197,7 +197,6 @@ diff_non_zero_int!(NonZeroU64, u64);
 diff_non_zero_int!(NonZeroU128, u128);
 diff_non_zero_int!(NonZeroUsize, usize);
 
-diff_int!();
 diff_float!(f32, f64);
 
 impl Diff for char {
