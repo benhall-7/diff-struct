@@ -1,6 +1,6 @@
 [package]
 name = "diff-struct"
-description = "A trait for diffing and apply diffs to structs of a certain type"
+description = "A trait for diffing and applying diffs to types"
 version = "0.4.2"
 authors = ["BenHall-7 <benjaminjahall@gmail.com>"]
 repository = "https://github.com/BenHall-7/diff-struct"
@@ -18,6 +18,6 @@ serde = { version = "1", features = [ "derive" ] }
 
 [dev-dependencies]
 quickcheck = "0.8"
-quickcheck_macros = "0.8"
 quickcheck_derive = "0.3"
+quickcheck_macros = "0.8"
 rand = "0.6"
