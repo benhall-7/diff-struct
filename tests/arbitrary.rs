@@ -1,3 +1,5 @@
+#![allow(clippy::unused_unit)]
+
 use diff::Diff;
 use quickcheck::quickcheck;
 use quickcheck_derive::Arbitrary;
