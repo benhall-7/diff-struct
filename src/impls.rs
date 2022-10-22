@@ -2,10 +2,8 @@ use super::utils::find_match;
 use super::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::convert::TryInto;
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
-use std::iter;
 use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -832,7 +830,7 @@ pub struct ArrayDiffType<T: Diff> {
 #[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
 pub struct ArrayDiff<T: Diff>(pub Vec<ArrayDiffType<T>>);
 
-impl<const N: usize, T: Default + Debug + Diff + PartialEq> Diff for [T; N] {
+impl<T: Diff + PartialEq, const N: usize> Diff for [T; N] {
     type Repr = ArrayDiff<T>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
@@ -857,11 +855,7 @@ impl<const N: usize, T: Default + Debug + Diff + PartialEq> Diff for [T; N] {
     }
 
     fn identity() -> Self {
-        iter::repeat_with(T::identity)
-            .take(N)
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap()
+        std::array::from_fn(|_| T::identity())
     }
 }
 
