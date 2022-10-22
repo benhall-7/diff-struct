@@ -175,6 +175,29 @@ fn test_vecs() {
     assert_eq!(diff, a.diff(&b));
     assert_eq!(a.apply_new(&diff), b);
 }
+
+#[test]
+fn test_arrays() {
+    let array = [1, 2, 3, 4, 5];
+    identity_test(array);
+    let other = [1, 2, 7, 4, 0];
+    let diff = array.diff(&other);
+    assert_eq!(
+        diff,
+        ArrayDiff(vec![
+            ArrayDiffType {
+                index: 2,
+                change: 4
+            },
+            ArrayDiffType {
+                index: 4,
+                change: -5
+            }
+        ])
+    );
+    assert_eq!(array.apply_new(&diff), other);
+}
+
 use serde::Serialize;
 
 #[derive(Default, PartialEq, Serialize, Diff)]

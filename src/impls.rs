@@ -596,85 +596,6 @@ pub enum VecDiffType<T: Diff> {
     Inserted { index: usize, changes: Vec<T::Repr> },
 }
 
-impl<T: Diff> Debug for VecDiffType<T>
-where
-    T::Repr: Debug,
-{
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        match self {
-            VecDiffType::Removed { index, len } => f
-                .debug_struct("Removed")
-                .field("index", index)
-                .field("len", len)
-                .finish(),
-            VecDiffType::Altered { index, changes } => f
-                .debug_struct("Altered")
-                .field("index", index)
-                .field("changes", changes)
-                .finish(),
-            VecDiffType::Inserted { index, changes } => f
-                .debug_struct("Inserted")
-                .field("index", index)
-                .field("changes", changes)
-                .finish(),
-        }
-    }
-}
-
-impl<T: Diff> PartialEq for VecDiffType<T>
-where
-    T::Repr: PartialEq,
-{
-    fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (
-                VecDiffType::Removed { index, len },
-                VecDiffType::Removed {
-                    index: ref index_,
-                    len: ref len_,
-                },
-            ) => index == index_ && len == len_,
-            (
-                VecDiffType::Altered { index, changes },
-                VecDiffType::Altered {
-                    index: ref index_,
-                    changes: ref changes_,
-                },
-            ) => index == index_ && changes == changes_,
-            (
-                VecDiffType::Inserted { index, changes },
-                VecDiffType::Inserted {
-                    index: ref index_,
-                    changes: ref changes_,
-                },
-            ) => index == index_ && changes == changes_,
-            _ => false,
-        }
-    }
-}
-
-impl<T: Diff> Clone for VecDiffType<T>
-where
-    T::Repr: Clone,
-{
-    fn clone(&self) -> Self {
-        match self {
-            VecDiffType::Removed { index, len } => VecDiffType::Removed {
-                index: *index,
-                len: *len,
-            },
-            VecDiffType::Altered { index, changes } => VecDiffType::Altered {
-                index: *index,
-                changes: changes.clone(),
-            },
-            VecDiffType::Inserted { index, changes } => VecDiffType::Inserted {
-                index: *index,
-                changes: changes.clone(),
-            },
-        }
-    }
-}
-
 /// The collection of difference-vec's
 #[derive(Serialize, Deserialize)]
 #[serde(bound(serialize = "T::Repr: Serialize"))]
@@ -790,21 +711,24 @@ impl<T: Diff + PartialEq> Diff for Vec<T> {
     }
 }
 
-/// The type of change to make to a vec
-#[derive(Serialize, Deserialize)]
-#[serde(bound(serialize = "T::Repr: Serialize"))]
-#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
-pub enum ArrayDiffType<T: Diff> {
-    Altered { index: usize, changes: Vec<T::Repr> },
-}
-impl<T: Diff> Debug for ArrayDiffType<T>
+impl<T: Diff> Debug for VecDiffType<T>
 where
     T::Repr: Debug,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
-            Self::Altered { index, changes } => f
+            VecDiffType::Removed { index, len } => f
+                .debug_struct("Removed")
+                .field("index", index)
+                .field("len", len)
+                .finish(),
+            VecDiffType::Altered { index, changes } => f
                 .debug_struct("Altered")
+                .field("index", index)
+                .field("changes", changes)
+                .finish(),
+            VecDiffType::Inserted { index, changes } => f
+                .debug_struct("Inserted")
                 .field("index", index)
                 .field("changes", changes)
                 .finish(),
@@ -812,60 +736,57 @@ where
     }
 }
 
-/// The collection of difference-vec's
-#[derive(Serialize, Deserialize)]
-#[serde(bound(serialize = "T::Repr: Serialize"))]
-#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
-pub struct ArrayDiff<T: Diff>(pub Vec<ArrayDiffType<T>>);
-
-impl<T: Diff> Debug for ArrayDiff<T>
+impl<T: Diff> PartialEq for VecDiffType<T>
 where
-    T::Repr: Debug,
+    T::Repr: PartialEq,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-        f.debug_list().entries(self.0.iter()).finish()
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                VecDiffType::Removed { index, len },
+                VecDiffType::Removed {
+                    index: ref index_,
+                    len: ref len_,
+                },
+            ) => index == index_ && len == len_,
+            (
+                VecDiffType::Altered { index, changes },
+                VecDiffType::Altered {
+                    index: ref index_,
+                    changes: ref changes_,
+                },
+            ) => index == index_ && changes == changes_,
+            (
+                VecDiffType::Inserted { index, changes },
+                VecDiffType::Inserted {
+                    index: ref index_,
+                    changes: ref changes_,
+                },
+            ) => index == index_ && changes == changes_,
+            _ => false,
+        }
     }
 }
 
-impl<const N: usize, T: Default + Debug + Diff + PartialEq> Diff for [T; N] {
-    type Repr = ArrayDiff<T>;
-
-    fn diff(&self, other: &Self) -> Self::Repr {
-        ArrayDiff(
-            self.iter()
-                .zip(other.iter())
-                .enumerate()
-                .filter_map(|(index, (self_el, other_el))| {
-                    self_el.ne(other_el).then(|| ArrayDiffType::Altered {
-                        index,
-                        changes: vec![self_el.diff(other_el)],
-                    })
-                })
-                .collect(),
-        )
-    }
-
-    fn apply(&mut self, diff: &Self::Repr) {
-        let relative_index = 0_isize;
-        for change in &diff.0 {
-            match change {
-                ArrayDiffType::Altered { index, changes } => {
-                    let index = (*index as isize + relative_index) as usize;
-                    let range = index..index + changes.len();
-                    for (value, diff) in self[range].iter_mut().zip(changes.iter()) {
-                        value.apply(diff);
-                    }
-                }
-            }
+impl<T: Diff> Clone for VecDiffType<T>
+where
+    T::Repr: Clone,
+{
+    fn clone(&self) -> Self {
+        match self {
+            VecDiffType::Removed { index, len } => VecDiffType::Removed {
+                index: *index,
+                len: *len,
+            },
+            VecDiffType::Altered { index, changes } => VecDiffType::Altered {
+                index: *index,
+                changes: changes.clone(),
+            },
+            VecDiffType::Inserted { index, changes } => VecDiffType::Inserted {
+                index: *index,
+                changes: changes.clone(),
+            },
         }
-    }
-
-    fn identity() -> Self {
-        iter::repeat_with(T::default)
-            .take(N)
-            .collect::<Vec<_>>()
-            .try_into()
-            .unwrap()
     }
 }
 
@@ -888,6 +809,114 @@ where
 }
 
 impl<T: Diff> Clone for VecDiff<T>
+where
+    T::Repr: Clone,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
+/// The type of change to make to an array
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T::Repr: Serialize"))]
+#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
+pub struct ArrayDiffType<T: Diff> {
+    pub index: usize,
+    pub change: T::Repr,
+}
+
+/// The collection of difference-vec's
+#[derive(Serialize, Deserialize)]
+#[serde(bound(serialize = "T::Repr: Serialize"))]
+#[serde(bound(deserialize = "T::Repr: Deserialize<'de>"))]
+pub struct ArrayDiff<T: Diff>(pub Vec<ArrayDiffType<T>>);
+
+impl<const N: usize, T: Default + Debug + Diff + PartialEq> Diff for [T; N] {
+    type Repr = ArrayDiff<T>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        ArrayDiff(
+            self.iter()
+                .zip(other.iter())
+                .enumerate()
+                .filter_map(|(index, (self_el, other_el))| {
+                    self_el.ne(other_el).then(|| ArrayDiffType {
+                        index,
+                        change: self_el.diff(other_el),
+                    })
+                })
+                .collect(),
+        )
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        for ArrayDiffType { index, change } in &diff.0 {
+            self[*index].apply(change);
+        }
+    }
+
+    fn identity() -> Self {
+        iter::repeat_with(T::identity)
+            .take(N)
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap()
+    }
+}
+
+impl<T: Diff> Debug for ArrayDiffType<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_struct("ArrayDiffType")
+            .field("index", &self.index)
+            .field("change", &self.change)
+            .finish()
+    }
+}
+
+impl<T: Diff> PartialEq for ArrayDiffType<T>
+where
+    T::Repr: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.index == other.index && self.change == other.change
+    }
+}
+
+impl<T: Diff> Clone for ArrayDiffType<T>
+where
+    T::Repr: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            index: self.index,
+            change: self.change.clone(),
+        }
+    }
+}
+
+impl<T: Diff> Debug for ArrayDiff<T>
+where
+    T::Repr: Debug,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.debug_list().entries(self.0.iter()).finish()
+    }
+}
+
+impl<T: Diff> PartialEq for ArrayDiff<T>
+where
+    T::Repr: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<T: Diff> Clone for ArrayDiff<T>
 where
     T::Repr: Clone,
 {
