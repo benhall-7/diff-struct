@@ -168,6 +168,7 @@ diff_int!(u8, i8, u16, i16, u32, i32, u64, i64, usize, isize);
 
 macro_rules! diff_non_zero_int {
     ($($ty:ty, $original:ty),*) => {
+        #[cfg(feature = "impl_num")]
         $(impl Diff for $ty {
             type Repr = $original;
 
@@ -186,6 +187,8 @@ macro_rules! diff_non_zero_int {
         })*
     };
 }
+
+#[cfg(feature = "impl_num")]
 use std::num::{NonZeroU128, NonZeroU16, NonZeroU32, NonZeroU64, NonZeroU8, NonZeroUsize};
 
 diff_non_zero_int!(NonZeroU8, u8);

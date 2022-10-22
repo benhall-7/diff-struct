@@ -11,10 +11,14 @@ edition = "2018"
 name = "diff"
 path = "src/lib.rs"
 
+[features]
+default = ["impl_num"]
+impl_num = ["num"]
+
 [dependencies]
 diff_derive = { version = "0.2.2" }
-num = "0.4.0"
 serde = { version = "1", features = [ "derive" ] }
+num = { version = "0.4.0", optional = true }
 
 [dev-dependencies]
 quickcheck = "0.8"
