@@ -49,7 +49,7 @@ dependencies = [
 
 [[package]]
 name = "diff-struct"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "diff_derive",
  "num",
@@ -62,9 +62,9 @@ dependencies = [
 
 [[package]]
 name = "diff_derive"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a73d13d0b23e0725ab4003d93e93d7e71f292995af7877b5b5de45b7b595c031"
+checksum = "fe165e7ead196bbbf44c7ce11a7a21157b5c002ce46d7098ff9c556784a4912d"
 dependencies = [
  "proc-macro2 1.0.47",
  "quote 1.0.21",

@@ -94,6 +94,7 @@ fn test_path() {
     #[derive(Debug, PartialEq)]
 ))]
 #[diff(name(TestDiff))]
+#[diff(path(crate))]
 struct TestStruct {
     a: bool,
     b: u32,
@@ -118,6 +119,7 @@ fn test_derive() {
 #[diff(attr(
     #[derive(Debug, PartialEq)]
 ))]
+#[diff(path(crate))]
 struct TestTupleStruct(i32);
 
 #[test]
@@ -130,6 +132,7 @@ fn test_tuple_derive() {
 
 #[derive(Debug, Default, PartialEq, Diff)]
 #[diff(visibility(pub))]
+#[diff(path(crate))]
 struct ProjectMeta {
     contributors: Vec<String>,
     combined_work_hours: usize,
@@ -206,6 +209,7 @@ use serde::Serialize;
 #[diff(attr(
     #[derive(Default, PartialEq, Serialize)]
 ))]
+#[diff(path(crate))]
 /// A struct with a lot of attributes
 struct MyTestStruct {
     #[diff(name(special_field_name))]
