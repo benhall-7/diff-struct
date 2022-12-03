@@ -6,6 +6,8 @@ pub mod utils;
 pub use diff_derive::Diff;
 pub use impls::*;
 
+mod alternate;
+
 /// A trait to diff and apply diffs between two structs
 /// The derive macro can be used on structs when all fields of the struct implement Diff
 /// Implementations are provided for bools, numeric types, Option types, and HashMaps
