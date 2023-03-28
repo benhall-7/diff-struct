@@ -1,12 +1,18 @@
 use super::utils::find_match;
 use super::*;
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
 use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::{
+    borrow::Borrow,
+    fmt::{Debug, Formatter, Result as FmtResult},
+};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+};
 
 impl Diff for bool {
     type Repr = Option<bool>;
@@ -280,6 +286,32 @@ impl<'a> Diff for &'a str {
     fn apply(&mut self, diff: &Self::Repr) {
         if let Some(diff) = diff {
             *self = diff
+        }
+    }
+
+    fn identity() -> Self {
+        Default::default()
+    }
+}
+
+impl<'a, T> Diff for Cow<'a, T>
+where
+    T: ToOwned + PartialEq + ?Sized,
+    <T as ToOwned>::Owned: Default,
+{
+    type Repr = Option<Cow<'a, T>>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        if self != other {
+            Some(other.clone())
+        } else {
+            None
+        }
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(diff) = diff {
+            *self = diff.clone()
         }
     }
 
