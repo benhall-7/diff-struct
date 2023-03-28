@@ -294,7 +294,7 @@ impl<'a> Diff for &'a str {
     }
 }
 
-impl<'a, T> Diff for Cow<'a, T>
+impl<T> Diff for Cow<'_, T>
 where
     T: ToOwned + PartialEq + ?Sized,
     <T as ToOwned>::Owned: Clone + Default,
