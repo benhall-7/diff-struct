@@ -297,13 +297,14 @@ impl<'a> Diff for &'a str {
 impl<'a, T> Diff for Cow<'a, T>
 where
     T: ToOwned + PartialEq + ?Sized,
-    <T as ToOwned>::Owned: Default,
+    <T as ToOwned>::Owned: Clone + Default,
 {
-    type Repr = Option<Cow<'a, T>>;
+    /// Note: This was done to make sure diffs are able to outlive its sources, which is the most desirable outcome if the diff is to be moved around and consumed much later (or even serialized into foreign programs)
+    type Repr = Option<<T as ToOwned>::Owned>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
         if self != other {
-            Some(other.clone())
+            Some(other.clone().into_owned())
         } else {
             None
         }
@@ -311,7 +312,7 @@ where
 
     fn apply(&mut self, diff: &Self::Repr) {
         if let Some(diff) = diff {
-            *self = diff.clone()
+            *self = Cow::Owned(diff.clone())
         }
     }
 
