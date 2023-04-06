@@ -16,9 +16,6 @@ The derive macro can be used on tuple or field structs to produce a new struct r
 #[diff(attr(
     #[derive(Debug, PartialEq)]
 ))]
-struct MyStruct {
-    ...
-}
 pub struct ProjectMeta {
     contributors: Vec<String>,
     combined_work_hours: usize,
