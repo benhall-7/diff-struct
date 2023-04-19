@@ -12,6 +12,10 @@ The derive macro can be used on tuple or field structs to produce a new struct r
 
 ```rust
 #[derive(Debug, Default, PartialEq, Diff)]
+// this will apply the specified derives on the generated 'ProjectMetaDiff' struct
+#[diff(attr(
+    #[derive(Debug, PartialEq)]
+))]
 pub struct ProjectMeta {
     contributors: Vec<String>,
     combined_work_hours: usize,
