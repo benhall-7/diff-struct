@@ -1,12 +1,10 @@
 use super::*;
 
+use std::borrow::Cow;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::path::PathBuf;
-use std::{
-    borrow::Cow,
-    collections::{HashMap, HashSet},
-};
 
 fn identity_test<D: Diff + Debug + PartialEq>(s: D) {
     assert_eq!(D::identity().apply_new(&D::identity().diff(&s)), s);

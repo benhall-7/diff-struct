@@ -1,18 +1,13 @@
 use super::utils::find_match;
 use super::*;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
 use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::{
-    borrow::Borrow,
-    fmt::{Debug, Formatter, Result as FmtResult},
-};
-use std::{
-    borrow::Cow,
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
-};
 
 impl Diff for bool {
     type Repr = Option<bool>;
@@ -299,7 +294,9 @@ where
     T: ToOwned + PartialEq + ?Sized,
     <T as ToOwned>::Owned: Clone + Default,
 {
-    /// Note: This was done to make sure diffs are able to outlive its sources, which is the most desirable outcome if the diff is to be moved around and consumed much later (or even serialized into foreign programs)
+    /// Note: This was done to make sure a diff is able to outlive its sources,
+    /// which is the most desirable outcome if the diff is to be moved around
+    /// and consumed much later (or even serialized into foreign programs)
     type Repr = Option<<T as ToOwned>::Owned>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
