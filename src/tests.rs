@@ -4,6 +4,7 @@ use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::marker::PhantomData;
 use std::path::PathBuf;
 
 fn identity_test<D: Diff + Debug + PartialEq>(s: D) {
@@ -239,4 +240,31 @@ fn test_full_struct() {
 
     let diff = base.diff(&other);
     assert_eq!(diff.special_field_name, 1);
+}
+
+#[derive(Diff, PartialEq)]
+#[diff(attr(#[derive(Debug, PartialEq)]))]
+#[diff(path(crate))]
+struct PhantomDataTest<T> {
+    value: i32,
+    phantom: PhantomData<T>,
+}
+
+#[test]
+fn test_phantom_data() {
+    let base = PhantomDataTest::<String> {
+        value: 100,
+        phantom: Default::default(),
+    };
+    let other = PhantomDataTest::<String> {
+        value: 142,
+        phantom: Default::default(),
+    };
+    assert_eq!(
+        base.diff(&other),
+        PhantomDataTestDiff::<String> {
+            value: 42,
+            phantom: Default::default(),
+        }
+    );
 }

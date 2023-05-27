@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
+use std::marker::PhantomData;
 use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -949,5 +950,19 @@ where
 {
     fn clone(&self) -> Self {
         Self(self.0.clone())
+    }
+}
+
+impl<T> Diff for PhantomData<T> {
+    type Repr = PhantomData<T>;
+
+    fn diff(&self, _other: &Self) -> Self::Repr {
+        PhantomData::default()
+    }
+
+    fn apply(&mut self, _diff: &Self::Repr) {}
+    
+    fn identity() -> Self {
+        PhantomData::default()
     }
 }
