@@ -961,7 +961,7 @@ impl<T> Diff for PhantomData<T> {
     }
 
     fn apply(&mut self, _diff: &Self::Repr) {}
-    
+
     fn identity() -> Self {
         PhantomData::default()
     }
