@@ -1,7 +1,7 @@
 [package]
 name = "diff-struct"
 description = "A trait for diffing and applying diffs to types"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["BenHall-7 <benjaminjahall@gmail.com>"]
 repository = "https://github.com/benhall-7/diff-struct"
 license = "MIT"

@@ -49,7 +49,7 @@ dependencies = [
 
 [[package]]
 name = "diff-struct"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "diff_derive",
  "num",
