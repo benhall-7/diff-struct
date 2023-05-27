@@ -1,5 +1,6 @@
 use super::*;
 
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
@@ -41,6 +42,16 @@ fn test_char_string() {
         Some(String::from("asdf"))
     );
     assert_eq!(String::from("42").diff(&String::from("42")), None);
+}
+
+#[test]
+fn test_cow() {
+    // Cow<'_, str>
+    assert_eq!(
+        Cow::from("42").diff(&Cow::from("asdf")),
+        Some("asdf".into())
+    );
+    assert_eq!(Cow::from("42").diff(&Cow::from("42")), None);
 }
 
 #[test]

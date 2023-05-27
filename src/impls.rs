@@ -1,6 +1,7 @@
 use super::utils::find_match;
 use super::*;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 use std::hash::Hash;
@@ -280,6 +281,35 @@ impl<'a> Diff for &'a str {
     fn apply(&mut self, diff: &Self::Repr) {
         if let Some(diff) = diff {
             *self = diff
+        }
+    }
+
+    fn identity() -> Self {
+        Default::default()
+    }
+}
+
+impl<T> Diff for Cow<'_, T>
+where
+    T: ToOwned + PartialEq + ?Sized,
+    <T as ToOwned>::Owned: Clone + Default,
+{
+    /// Note: This was done to make sure a diff is able to outlive its sources,
+    /// which is the most desirable outcome if the diff is to be moved around
+    /// and consumed much later (or even serialized into foreign programs)
+    type Repr = Option<<T as ToOwned>::Owned>;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        if self != other {
+            Some(other.clone().into_owned())
+        } else {
+            None
+        }
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(diff) = diff {
+            *self = Cow::Owned(diff.clone())
         }
     }
 
