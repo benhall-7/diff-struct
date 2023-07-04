@@ -6,6 +6,7 @@ use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::PhantomData;
 use std::path::PathBuf;
+use std::rc::Rc;
 
 fn identity_test<D: Diff + Debug + PartialEq>(s: D) {
     assert_eq!(D::identity().apply_new(&D::identity().diff(&s)), s);
@@ -267,4 +268,53 @@ fn test_phantom_data() {
             phantom: Default::default(),
         }
     );
+}
+
+#[test]
+fn test_box() {
+    let array = [1, 2, 3, 4, 5];
+    identity_test(array);
+    let other = [1, 2, 7, 4, 0];
+
+    let array = Box::new(array);
+    let other = Box::new(other);
+
+    let diff = array.diff(&other);
+    assert_eq!(
+        diff,
+        ArrayDiff(vec![
+            ArrayDiffType {
+                index: 2,
+                change: 4
+            },
+            ArrayDiffType {
+                index: 4,
+                change: -5
+            }
+        ])
+    );
+    assert_eq!(array.apply_new(&diff), other);
+}
+
+
+#[test]
+fn test_rc() {
+    let array = [1, 2, 7, 4, 5];
+    identity_test(array);
+    let other = [1, 2, 7, 4, 0];
+
+    let array = Rc::new(array);
+    let other = Rc::new(other);
+
+    let diff = array.diff(&other);
+    assert_eq!(
+        diff,
+        ArrayDiff(vec![
+            ArrayDiffType {
+                index: 4,
+                change: -5
+            },
+        ])
+    );
+    assert_eq!(array.apply_new(&diff), other);
 }
