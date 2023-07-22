@@ -8,6 +8,7 @@ use std::hash::Hash;
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::sync::Arc;
 
 impl Diff for bool {
@@ -55,6 +56,51 @@ where
 
     fn identity() -> Self {
         Arc::new(T::identity())
+    }
+}
+
+impl<T> Diff for Box<T>
+where
+    T: Diff + Clone,
+{
+    type Repr = T::Repr;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        self.deref().diff(other.deref())
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+       self.as_mut().apply(diff)
+    }
+
+    fn identity() -> Self {
+        Box::new(T::identity())
+    }
+}
+
+impl<T> Diff for Rc<T>
+where
+    T: Diff + Clone,
+{
+    type Repr = T::Repr;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        self.deref().diff(other.deref())
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        match Rc::get_mut(self) {
+            Some(m) => m.apply(diff),
+            None => {
+                let mut x = (**self).clone();
+                x.apply(diff);
+                *self = Rc::new(x);
+            }
+        }
+    }
+
+    fn identity() -> Self {
+        Rc::new(T::identity())
     }
 }
 
