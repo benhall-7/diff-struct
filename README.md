@@ -4,7 +4,11 @@ A Rust trait for diffing and applying diffs between data structures. Features a 
 
 Abstractly speaking, a 'diff' between two structs `A` and `B` can be considered the change necessary to make to `A` to produce `B`. Succinctly, the pattern can be written as `A -> B = D and A <- D = B`
 
-Diff is automatically derived on bools, numerals, Option's, HashMap's, and Vec's (provided the types they contain also implement Diff). The implementation of diffing Vec's is non-standard. It is faster and simpler than Myer's algorithm, but more error-prone on lists with many nearby duplicate elements.
+Diff is automatically derived on several common base types, include: integers (i8, u32, etc), floats, non-zero integers, booleans, char, String, &str, and PathBuf.
+
+Diff is also derived on several container types, such as: Option, Box, Rc, Arc, HashMap, BTreeMap, HashSet, BTreeSet, tuples (up to length 18), arrays, and Vec's.
+
+Container types are subject to some type restrictions in order to diff. The inner type T always has to implement Diff. Depending on the container type, other restrictions apply, such as Debug, Clone, PartialEq. These restrictions may also apply to the diff type (T::Repr). The implementation of diffing Vec's is non-standard. It is faster and simpler than Myer's algorithm, but more error-prone on lists with many nearby duplicate elements.
 
 ## Derive macro
 
