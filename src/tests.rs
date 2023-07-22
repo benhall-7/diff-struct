@@ -282,7 +282,7 @@ fn test_box() {
     let diff = array.diff(&other);
     assert_eq!(
         diff,
-        ArrayDiff(vec![
+        Box::new(ArrayDiff(vec![
             ArrayDiffType {
                 index: 2,
                 change: 4
@@ -291,11 +291,10 @@ fn test_box() {
                 index: 4,
                 change: -5
             }
-        ])
+        ]))
     );
     assert_eq!(array.apply_new(&diff), other);
 }
-
 
 #[test]
 fn test_rc() {
@@ -309,12 +308,10 @@ fn test_rc() {
     let diff = array.diff(&other);
     assert_eq!(
         diff,
-        ArrayDiff(vec![
-            ArrayDiffType {
-                index: 4,
-                change: -5
-            },
-        ])
+        ArrayDiff(vec![ArrayDiffType {
+            index: 4,
+            change: -5
+        },])
     );
     assert_eq!(array.apply_new(&diff), other);
 }

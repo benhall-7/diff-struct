@@ -61,16 +61,16 @@ where
 
 impl<T> Diff for Box<T>
 where
-    T: Diff + Clone,
+    T: Diff,
 {
-    type Repr = T::Repr;
+    type Repr = Box<T::Repr>;
 
     fn diff(&self, other: &Self) -> Self::Repr {
-        self.deref().diff(other.deref())
+        Box::new(self.deref().diff(other.deref()))
     }
 
     fn apply(&mut self, diff: &Self::Repr) {
-       self.as_mut().apply(diff)
+       self.as_mut().apply(diff.as_ref())
     }
 
     fn identity() -> Self {
