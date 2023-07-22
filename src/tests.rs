@@ -296,6 +296,50 @@ fn test_box() {
     assert_eq!(array.apply_new(&diff), other);
 }
 
+#[derive(Debug, PartialEq, Diff)]
+#[diff(path(crate))]
+#[diff(attr(#[derive(Debug, PartialEq)]))]
+struct LinkedListNode<T: Diff + PartialEq>
+where
+    T::Repr: Debug + PartialEq,
+{
+    value: T,
+    child: Option<Box<LinkedListNode<T>>>,
+}
+
+#[test]
+fn test_box_recursive() {
+    let node = LinkedListNode {
+        value: 10,
+        child: Some(Box::new(LinkedListNode {
+            value: 2,
+            child: Some(Box::new(LinkedListNode {
+                value: 1,
+                child: None,
+            })),
+        })),
+    };
+    let other = LinkedListNode {
+        value: 42,
+        child: Some(Box::new(LinkedListNode {
+            value: 2,
+            child: None,
+        })),
+    };
+    let diff = node.diff(&other);
+    assert_eq!(
+        diff,
+        LinkedListNodeDiff {
+            value: 32,
+            child: OptionDiff::Some(Box::new(LinkedListNodeDiff {
+                value: 0,
+                child: OptionDiff::None
+            })),
+        }
+    );
+    assert_eq!(node.apply_new(&diff), other);
+}
+
 #[test]
 fn test_rc() {
     let array = [1, 2, 7, 4, 5];
