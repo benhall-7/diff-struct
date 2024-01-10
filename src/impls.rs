@@ -70,7 +70,7 @@ where
     }
 
     fn apply(&mut self, diff: &Self::Repr) {
-       self.as_mut().apply(diff.as_ref())
+        self.as_mut().apply(diff.as_ref())
     }
 
     fn identity() -> Self {

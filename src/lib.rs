@@ -1,3 +1,4 @@
+mod alternate;
 mod impls;
 #[cfg(test)]
 mod tests;
