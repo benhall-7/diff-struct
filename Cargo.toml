@@ -14,11 +14,13 @@ path = "src/lib.rs"
 [features]
 default = ["impl_num"]
 impl_num = ["num"]
+impl_uuid = ["uuid"]
 
 [dependencies]
 diff_derive = "0.2.3"
 serde = { version = "1", features = ["derive"] }
 num = { version = "0.4.0", optional = true }
+uuid = { version = "1.10.0", optional = true}
 
 [dev-dependencies]
 quickcheck = "0.8"

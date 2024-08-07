@@ -11,6 +11,26 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::Arc;
 
+#[cfg(feature = "uuid")]
+impl Diff for uuid::Uuid {
+    type Repr = Option<uuid::Uuid>;
+    fn diff(&self, other: &Self) -> Self::Repr {
+        if self.as_u128().eq(&other.as_u128()) {
+            None
+        } else {
+            Some(*other)
+        }
+    }
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(diff) = diff {
+            *self = *diff;
+        }
+    }
+    fn identity() -> Self {
+        uuid::Uuid::from_u128(0xa1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8u128)
+    }
+}
+
 impl Diff for bool {
     type Repr = Option<bool>;
 
@@ -70,7 +90,7 @@ where
     }
 
     fn apply(&mut self, diff: &Self::Repr) {
-       self.as_mut().apply(diff.as_ref())
+        self.as_mut().apply(diff.as_ref())
     }
 
     fn identity() -> Self {
